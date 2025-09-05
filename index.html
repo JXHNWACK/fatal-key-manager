@@ -806,21 +806,19 @@ dialog::backdrop{
       'UncleTrash': 'password'
     };
 
-    function pickPresetUser(name){
-      if(!name) return;
-      var uEl = document.getElementById('loginUser');
-      var pEl = document.getElementById('loginPass');
-      if(uEl) uEl.value = name;
-      // Do not auto-fill password anymore
-      // var pw = (name === 'JXHNWACK') ? '1212' : 'password';
-      // if(pEl) pEl.value = pw;
-      if(pEl) pEl.focus();
-    }
+function pickPresetUser(name){
+  if(!name) return;
+  // Only focus the password; do not auto-fill any password.
+  var pEl = document.getElementById('loginPass');
+  if(pEl) pEl.focus();
+}
 
     function attemptLogin(ev){
       if(ev) ev.preventDefault();
-      var u = ($('#loginUser') && $('#loginUser').value.trim()) || '';
-      var p = ($('#loginPass') && $('#loginPass').value) || '';
+      var u = (document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim() : '') 
+              || (document.getElementById('loginPick') ? document.getElementById('loginPick').value : '')
+              || '';
+      var p = (document.getElementById('loginPass') ? document.getElementById('loginPass').value : '');
       if(USERS[u] && USERS[u] === p){
         var el = document.getElementById('welcomeScreen');
         if(el) el.style.display = 'none';
