@@ -186,15 +186,29 @@
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
 
 
-    /* --- Login success glow on the welcome logo --- */
+    /* --- Login success glow on the welcome logo (longer + brighter) --- */
     .welcome-card img.login-pulse{
-      animation: login-glow 1.2s ease-in-out 1;
+      animation: login-glow 3.6s ease-in-out 1;
     }
     @keyframes login-glow{
-      0%   { filter:none; box-shadow:0 0 22px rgba(105,207,218,.35); }
-      50%  { filter:brightness(1.08) saturate(1.05); box-shadow:0 0 44px rgba(105,207,218,.75); }
-      100% { filter:none; box-shadow:0 0 22px rgba(105,207,218,.35); }
+      0%   { filter:none; box-shadow:0 0 26px rgba(105,207,218,.45); }
+      25%  { filter:brightness(1.10) saturate(1.08); box-shadow:0 0 56px rgba(105,207,218,.85); }
+      50%  { filter:brightness(1.18) saturate(1.12); box-shadow:0 0 72px rgba(105,207,218,.95); }
+      75%  { filter:brightness(1.10) saturate(1.08); box-shadow:0 0 56px rgba(105,207,218,.85); }
+      100% { filter:none; box-shadow:0 0 26px rgba(105,207,218,.45); }
     }
+    /* --- Slim loading bar under the logo (shown during login) --- */
+    .welcome-card .login-progress{
+      display:none; height:6px; margin:6px 0 2px; border-radius:999px; overflow:hidden;
+      background: var(--panel-2);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .welcome-card .login-progress .bar{
+      height:100%; width:0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      animation: progress-run 3.6s ease-in-out forwards;
+    }
+    @keyframes progress-run{ from{ width:0% } to{ width:100% } }
     /* Respect reduced-motion */
     @media (prefers-reduced-motion: reduce){
       .welcome-card img.login-pulse{ animation:none; }
@@ -593,6 +607,7 @@ dialog::backdrop{
   <div id="welcomeScreen" aria-modal="true" role="dialog">
     <div class="welcome-card">
       <img src="./fs_logo_emoji.png" alt="Fatal Services Logo">
+      <div id="loginProgress" class="login-progress" aria-hidden="true"><div class="bar"></div></div>
       <h1>Fatal Services</h1>
       <p>Key Manager — Login</p>
       <form class="welcome-form" onsubmit="return attemptLogin(event)">
@@ -867,10 +882,20 @@ function pickPresetUser(name){
         var el = document.getElementById('welcomeScreen');
         var logoImg = el ? el.querySelector('.welcome-card img') : null;
         var btn = document.getElementById('loginGo');
+        var barWrap = document.getElementById('loginProgress');
         if(btn){ btn.disabled = true; btn.textContent = 'Signing in…'; }
         if(logoImg){ logoImg.classList.add('login-pulse'); }
+        if(barWrap){
+          barWrap.style.display = 'block';
+          var bar = barWrap.querySelector('.bar');
+          if(bar){
+            // restart animation in case of repeated attempts
+            bar.style.animation = 'none'; bar.offsetHeight; // reflow
+            bar.style.animation = 'progress-run 3.6s ease-in-out forwards';
+          }
+        }
 
-        // after 1.2s, finish login and hide overlay
+        // after 3.6s, finish login and hide overlay
         setTimeout(function(){
           if(el) el.style.display = 'none';
           // reset scroll to top-left on mobile after login
@@ -885,7 +910,7 @@ function pickPresetUser(name){
           var btnU=document.getElementById('userBtn');
           if(menu) menu.style.display='inline-block';
           if(btnU) btnU.textContent = u + ' ▾';
-        }, 1200);
+        }, 3600);
         return false;
       }else{
         var err = document.getElementById('welcomeError');
