@@ -1234,7 +1234,7 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
     }
 
     // ---------- actions ----------
-    function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.clipboard){ navigator.clipboard.writeText(k.code); } }
+function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.clipboard){ navigator.clipboard.writeText(k.code).then(function(){ showToast('Copied ✔'); }); } }
     async function removeKey(id){function copyCode(id){
   const k=state.keys.find(x=>x.id===id);
   if(k && navigator.clipboard){
