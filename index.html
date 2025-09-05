@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fatal Services — Key Manager</title>
+  <style>
+    :root{
+      --bg:#12111F;
+      --panel:#1A1930;
+      --panel-2:#0F0F1A;
+      --text:#E7F6F7;
+      --muted:#A7B8BB;
+      --accent:#69CFDA;
+      --accent-2:#41A8B5;
+      --danger:#EF476F;
+      --ok:#06D6A0;
+      --warn:#FFD166;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+
+    /* Global box sizing + prevent sideways scroll */
+    *, *::before, *::after{ box-sizing: border-box; }
+    html, body{ max-width:100%; overflow-x:hidden; }
+
+    /* Light mode palette (toggled by .light on :root) */
+    :root.light{
+      --bg:#F6F7FB;
+      --panel:#FFFFFF;
+      --panel-2:#F2F4F7;
+      --text:#111319;
+      --muted:#5A6570;
+      --accent:#178C97;
+      --accent-2:#0E6F79;
+      --danger:#C43C5C;
+      --ok:#0E9F79;
+      --warn:#E4A329;
+      --shadow: 0 10px 30px rgba(0,0,0,.10);
+    }
+
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 50% -100px, rgba(105,207,218,.15), transparent 60%), var(--bg);
+      color:var(--text);
+    }
+    .container{max-width:1100px; margin:24px auto; padding:0 16px}
+    .header{display:flex; align-items:center; gap:16px; padding:16px; background:linear-gradient(180deg, rgba(105,207,218,.08), rgba(105,207,218,.02)); border:1px solid rgba(105,207,218,.25); border-radius:var(--radius); box-shadow:var(--shadow)}
+    .logo{
+  width:78px; height:78px;
+  border-radius:50%;
+  background:#0c0c16 url('./fs_logo_emoji.png') center/cover no-repeat;
+  box-shadow:0 0 30px rgba(105,207,218,.55) inset, 0 0 22px rgba(105,207,218,.35);
+  animation: pulse-glow 2.5s infinite;  /* always pulsing */
+  position: relative; z-index: 1;
+}
+    /* Toolbar action layout: left stack (Clear/Undo), right row (Refresh/Bulk Add) */
+    /* Desktop default: keep everything inline and compact */
+    .toolbar .group.search{ align-items:center; }
+    .action-grid{ display:flex; gap:8px; align-items:center; width:auto; }
+    .action-grid .left-stack{ display:flex; flex-direction:row; gap:8px; }
+    .action-grid .right-row{ display:flex; flex-direction:row; gap:8px; margin-left:8px; }
+    .action-grid .left-stack button,
+    .action-grid .right-row button{ width:auto; }
+
+    /* Mobile / narrow only: 2-a-side (left stack vertical, right row horizontal) */
+    @media (max-width: 680px){
+      .action-grid{ width:100%; justify-content:space-between; }
+      .action-grid .left-stack{ flex-direction:column; gap:8px; flex:1 1 48%; }
+      .action-grid .left-stack button{ width:100%; }
+      .action-grid .right-row{ flex:1 1 48%; justify-content:flex-end; }
+      .toolbar .group.search input{ margin-bottom:6px; }
+    }
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
+  }
+  70% {
+    box-shadow: 0 0 40px rgba(105,207,218, 0), 0 0 22px rgba(105,207,218,.35) inset;
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
+  }
+}
+
+@-webkit-keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
+  }
+  70% {
+    box-shadow: 0 0 40px rgba(105,207,218, 0), 0 0 22px rgba(105,207,218,.35) inset;
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
+  }
+}
+    .title h1{margin:0; font-size:22px; letter-spacing:.5px}
+    .title p{margin:4px 0 0; color:var(--muted); font-size:13px}
+
+    .toolbar{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0}
+    .toolbar .group{display:flex; gap:8px; background:var(--panel); padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,.06)}
+    /* stacked, compact button group for manage actions */
+    .toolbar .group.stack{
+      flex-direction: column;
+      align-items: stretch;
+      gap:6px;
+    }
+    .toolbar .group.stack button,
+    .toolbar .group.stack label.btn-ghost,
+    .toolbar .group.stack .btn-primary{
+      font-size:12px;
+      padding:8px 10px;
+      line-height:1.1;
+    }
+    button, select, input[type="date"], input[type="text"]{
+      background:var(--panel-2); color:var(--text); border:1px solid rgba(255,255,255,.1); padding:10px 12px; border-radius:10px; cursor:pointer; font-size:14px
+    }
+    button:hover{border-color:rgba(105,207,218,.6)}
+    .btn-primary{background:linear-gradient(180deg, var(--accent), var(--accent-2)); color:#071216; font-weight:600; border:none}
+    .btn-ghost{background:transparent; border:1px dashed rgba(255,255,255,.18)}
+    .btn-ghost[disabled]{opacity:.45; cursor:not-allowed;}
+    .chip{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04)}
+    .dot{width:8px; height:8px; border-radius:50%}
+    .dot.ok{background:var(--ok)}
+    .dot.warn{background:var(--warn)}
+    .dot.danger{background:var(--danger)}
+
+    .tabs{display:flex; gap:8px; margin:10px 0 14px}
+    .tab{padding:10px 14px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); cursor:pointer}
+    .tab.active{background:linear-gradient(180deg, rgba(105,207,218,.22), rgba(105,207,218,.08)); border-color:rgba(105,207,218,.6)}
+
+    table{width:100%; border-collapse:separate; border-spacing:0 6px}
+    thead th{font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.6px; text-align:left; padding:0 12px}
+    tbody tr{background:var(--panel); box-shadow:var(--shadow)}
+    td{padding:8px 8px; border-top:1px solid rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.06)}
+
+    thead th.sortable{ cursor:pointer; user-select:none; }
+    thead th.sortable:hover{ color: var(--text); filter: brightness(1.05); }
+    thead th .caret{ opacity:.8; margin-left:6px; font-size:11px; }
+    td:first-child{border-top-left-radius:12px; border-bottom-left-radius:12px}
+    td:last-child{border-top-right-radius:12px; border-bottom-right-radius:12px}
+
+    .actions{display:flex; gap:6px; flex-wrap:wrap}
+    .empty{padding:24px; text-align:center; color:var(--muted); border:1px dashed rgba(255,255,255,.15); border-radius:12px; background:rgba(255,255,255,.02)}
+
+    dialog{border:none; border-radius:16px; padding:0; background:var(--panel); color:var(--text); box-shadow:var(--shadow); width:min(520px, 92vw)}
+    .modal-header{padding:14px 18px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; justify-content:space-between; align-items:center}
+    .modal-body{padding:18px}
+    .modal-footer{padding:14px 18px; border-top:1px solid rgba(255,255,255,.08); display:flex; justify-content:flex-end; gap:10px}
+    .field{display:flex; flex-direction:column; gap:6px; margin-bottom:12px}
+    .field label{font-size:12px; color:var(--muted)}
+    textarea{width:100%; min-height:120px; resize:vertical; background:var(--panel-2); color:var(--text); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:10px}
+
+    .search{flex:1}
+    .right{margin-left:auto}
+    .help{margin-top:12px; font-size:13px; color:var(--muted)}
+    details{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 12px}
+    details[open]{background:rgba(255,255,255,.05)}
+    summary{cursor:pointer}
+    code{background:rgba(0,0,0,.35); padding:2px 6px; border-radius:6px}
+
+    /* Welcome/login overlay (isolated) */
+    #welcomeScreen{
+      position:fixed; inset:0; background:var(--bg);
+      display:flex; align-items:center; justify-content:center;
+      z-index:9999;
+    }
+    .welcome-card{
+      width:min(520px, 92vw);
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:20px; box-shadow:var(--shadow);
+      padding:28px; text-align:center;
+    }
+    .welcome-card img{ width:84px; height:84px; border-radius:12px; margin-bottom:12px; box-shadow:0 0 22px rgba(105,207,218,.35); }
+    .welcome-card h1{ margin:0; font-size:22px; color:var(--accent); letter-spacing:.4px; }
+    .welcome-card p{ margin:6px 0 16px; color:var(--muted); }
+    .welcome-form{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+    .welcome-form input, .welcome-form select{
+      background:var(--panel-2); color:var(--text); border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; padding:10px 12px; font-size:14px;
+    }
+    .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
+    .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
+
+    /* User menu (header) */
+    .user-menu{position:relative; display:none; margin-left:12px;}
+    .user-menu .dropdown{
+      display:none; position:absolute; right:0; top:110%;
+      background:var(--panel); border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; box-shadow:var(--shadow); min-width:140px; z-index:10000;
+    }
+    .user-menu .dropdown button{
+      width:100%; text-align:left; background:transparent;
+      border:none; color:var(--text); padding:10px; cursor:pointer;
+    }
+    .user-menu .dropdown button:hover{background:rgba(255,255,255,.08);}
+    /* Compact toolbar dropdown */
+    .toolbar .menu-wrap{ position:relative; }
+    .toolbar .dropdown{
+      display:none; position:absolute; right:0; top:110%;
+      background:var(--panel); border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; box-shadow:var(--shadow); min-width:200px; z-index:10000; padding:6px;
+    }
+    .toolbar .dropdown .item{
+      display:block; width:100%; text-align:left; background:transparent;
+      border:none; color:var(--text); padding:10px; cursor:pointer; border-radius:8px;
+    }
+    .toolbar .dropdown .item:hover{ background:rgba(255,255,255,.08); }
+    .toolbar .dropdown .divider{ height:1px; background:rgba(255,255,255,.08); margin:6px 0; }
+    .toolbar label.item{ display:flex; align-items:center; gap:8px; cursor:pointer; }
+    .toolbar label.item input{ display:none; }
+    /* === new visual enhancements === */
+    /* animated glow behind the header */
+    .header{ position:relative; overflow:hidden; }
+    .header::before{
+      content:"";
+      position:absolute; inset:-30%;
+      background:
+        radial-gradient(600px 320px at 12% 40%, rgba(105,207,218,.22), transparent 60%),
+        radial-gradient(420px 260px at 88% -10%, rgba(105,207,218,.12), transparent 65%);
+      filter: blur(18px);
+      animation: header-pulse 6s ease-in-out infinite;
+      z-index:0;
+    }
+    .header > *{ position:relative; z-index:1; }
+
+    @keyframes header-pulse{
+      0%,100%{ opacity:.55; transform:scale(1); }
+      50%     { opacity:.9;  transform:scale(1.03); }
+    }
+
+    /* smooth lift/glow on hover */
+    button, .tab{
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+    }
+    button:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.28);
+    }
+    .btn-primary:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px rgba(105,207,218,.30);
+      filter: brightness(1.02);
+    }
+    .tab:hover{
+      transform: translateY(-1px);
+      border-color: rgba(105,207,218,.6);
+      background: linear-gradient(180deg, rgba(105,207,218,.18), rgba(105,207,218,.06));
+    }
+
+    /* subtle row highlight */
+    tbody tr{
+      transition: background .15s ease, transform .15s ease;
+    }
+    tbody tr:hover{
+      background: rgba(105,207,218,.06);
+      transform: translateY(-1px);
+    }
+    /* -- Pulse for Assigned chip (red) -- */
+    @keyframes pulse-danger {
+      0%   { box-shadow: 0 0 0 0 rgba(239,71,111,.8); transform: translateZ(0); }
+      50%  { box-shadow: 0 0 24px 6px rgba(239,71,111,.45); }
+      100% { box-shadow: 0 0 0 0 rgba(239,71,111,.8); }
+    }
+    /* animate the red status dot */
+    .chip .dot.danger{
+      animation: pulse-danger 1.5s ease-in-out infinite;
+    }
+
+    /* -- Pulse for Assigned chip (amber) -- */
+    @keyframes pulse-warn {
+      0%   { box-shadow: 0 0 0 0 rgba(255,209,102,.75); }
+      50%  { box-shadow: 0 0 22px 6px rgba(255,209,102,.40); }
+      100% { box-shadow: 0 0 0 0 rgba(255,209,102,.75); }
+    }
+    .chip .dot.warn{
+      animation: pulse-warn 1.6s ease-in-out infinite;
+    }
+    /* Smaller monospace in the Key column */
+    .key-cell{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 600;
+      font-size: 14px;        /* bigger font */
+      line-height: 1.05;      /* tight line height to keep rows compact */
+      white-space: nowrap;    /* prevent wrapping which would increase row height */
+    }
+
+    /* Badges for key type */
+    .badge{
+      display:inline-block;
+      padding:2px 8px;
+      font-size:13px;
+      font-weight:600;
+      border-radius:8px;
+      text-transform:capitalize;
+    }
+    .badge.Day{ background:rgba(105,207,218,.18); color:var(--accent); }
+    .badge.Week{ background:rgba(255,209,102,.18); color:var(--warn); }
+    .badge.Month{ background:rgba(239,71,111,.18); color:var(--danger); }
+    .badge.Lifetime{ background:rgba(14,159,121,.18); color:var(--ok); }
+
+    /* optional: if browser supports :has(), gently glow the whole chip when assigned */
+    @keyframes pulse-chip {
+      0%,100% { filter: brightness(1); }
+      50%     { filter: brightness(1.08); }
+    }
+    .chip:has(.dot.danger){
+      animation: none;
+      box-shadow: none;
+    }
+
+    /* -- Pulse for Available chip (green) -- */
+    @keyframes pulse-ok {
+      0%   { box-shadow: 0 0 0 0 rgba(6,214,160,.70); }
+      50%  { box-shadow: 0 0 20px 6px rgba(6,214,160,.35); }
+      100% { box-shadow: 0 0 0 0 rgba(6,214,160,.70); }
+    }
+    .chip .dot.ok{
+      animation: pulse-ok 2s ease-in-out infinite;
+    }
+
+    /* optional gentle glow of whole chip when available */
+    @keyframes pulse-chip-ok {
+      0%,100% { filter: brightness(1); }
+      50%     { filter: brightness(1.08); }
+    }
+    .chip:has(.dot.ok){
+      animation: none;
+      box-shadow: none;
+    }
+
+/* Multi‑color glow for FS logo: cycles hues without changing layout */
+.logo::after{
+  content:"";
+  position:absolute; inset:-16px;
+  border-radius:50%;
+  /* Soft halo that we will hue-rotate */
+  background: radial-gradient(closest-side, rgba(105,207,218,0.40), rgba(105,207,218,0) 72%);
+  filter: blur(18px) hue-rotate(0deg);
+  opacity: .60;
+  /* gentle colour cycle + gentle breathing */
+  animation: hue-spin 16s linear infinite, pulse-ring 3.2s ease-in-out infinite;
+  z-index:-1;
+  pointer-events:none;
+  will-change: filter, opacity, transform;
+}
+
+/* smoothly rotate through the color wheel */
+@keyframes hue-spin{
+  0%   { filter: blur(14px) hue-rotate(0deg); }
+  100% { filter: blur(14px) hue-rotate(360deg); }
+}
+
+/* keep a gentle scale pulse in sync with your existing glow */
+@keyframes pulse-ring{
+  0%,100% { transform: scale(1);    opacity:.85; }
+  50%     { transform: scale(1.02); opacity:.95; }
+}
+
+@keyframes spin{
+  to { transform: rotate(360deg); }
+}
+
+/* --- Visual improvements --- */
+
+/* 1) Blurred backdrop on modals */
+dialog::backdrop{
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(6px);
+}
+
+/* 2) Sticky toolbar with glass look */
+.toolbar{
+  position: sticky; top: 12px; z-index: 50;
+  backdrop-filter: blur(6px);
+  background: rgba(26,25,48,.75);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+/* 5) Clean focus rings */
+:focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+    /* Smaller Bulk Add textarea only (was 120px via generic textarea rule) */
+    #bulkText{
+      min-height: 100px;
+    }
+
+    /* Make Bulk Add textarea match the full input width */
+    #bulkModal textarea#bulkText{
+      width: 100%;
+      box-sizing: border-box;
+    }
+    /* ================= Mobile stacked-card layout + fixes (phones) ================= */
+    @media (max-width: 540px){
+      /* prevent sideways scroll */
+      html, body{ max-width:100%; overflow-x:hidden; }
+
+      /* Font and spacing tweaks for mobile */
+      body{ font-size:14px; }
+      .title h1{ font-size:16px; }
+      .title p{ font-size:11px; }
+      .chip{ font-size:11px; padding:4px 8px; }
+      .tab{ padding:6px 10px; font-size:12px; }
+      .toolbar .group.search input{ font-size:14px; padding:8px 10px; }
+      .toolbar .group.search button,
+      .toolbar .group button{ font-size:13px; padding:8px 10px; }
+      tbody td:first-child{ font-size:13px; }
+      tbody td::before{ font-size:11px; }
+      .actions button{ font-size:12px; padding:7px 8px; }
+      dialog{ font-size:14px; }
+      .welcome-card h1{ font-size:18px; }
+      .welcome-card p{ font-size:12px; }
+      .welcome-form input, .welcome-form select{ font-size:14px; padding:8px 10px; }
+      .welcome-actions button{ font-size:14px; padding:8px 12px; }
+
+      /* container & header alignment */
+      .container{ max-width:100%; padding:0 10px; }
+      /* Header (mobile): logo LEFT, title+subtitle as vertical block to right, chips wrap below */
+      .header{
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;            /* do NOT wrap logo/title, only chips below */
+        gap: 6px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .title{
+        order: 2;
+        flex: 1 1 auto;
+        max-width: 100%;
+        min-width: 0;
+        display: block;
+        margin: 0;
+      }
+      .title h1{
+        margin: 0 0 4px 0;
+        font-size: 14px;
+        letter-spacing: .4px;
+        line-height: 1.1;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: initial;
+      }
+      .title p{
+        margin: 0;
+        font-size: 10px;
+        color: var(--muted);
+        line-height: 1.15;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: initial;
+      }
+      .logo{
+        order: 1;
+        flex: 0 0 56px;
+        width: 56px;
+        height: 56px;
+        aspect-ratio: 1/1;
+        border-radius: 50%;
+        margin-right: 8px;
+        margin-left: 0;
+      }
+      .right{
+        order: 3;                     /* chips row */
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      /* toolbar stacks cleanly */
+      .toolbar{ top:8px; width:100%; box-sizing:border-box; }
+      .toolbar .group{ width:100%; }
+      .toolbar .group.search{ flex-direction:column; gap:6px; }
+      .toolbar .group.search input{ width:100%; }
+      .toolbar .group.search button{ width:100%; }
+
+      /* tabs tighter */
+      .tab{ padding:8px 12px; }
+
+      /* ---- turn table into stacked cards ---- */
+      thead{ display:none; }
+      table{ border-spacing:0; }
+      table, tbody, tr, td{ display:block; width:100%; }
+      tbody tr{
+        background:var(--panel);
+        border:1px solid rgba(255,255,255,.06);
+        border-radius:14px;
+        padding:10px 12px;
+        margin:10px 0;
+        box-shadow: var(--shadow);
+      }
+      /* key becomes title */
+      tbody td:first-child{
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-weight:700; font-size:14px; line-height:1.1;
+        padding:4px 0 6px 0; border:0; white-space:normal;
+      }
+      tbody td{
+        border:0; padding:6px 0;
+        display:flex; justify-content:space-between; align-items:center; gap:10px;
+        word-break:break-word;
+      }
+      /* field labels via pseudo-elements (no HTML changes needed) */
+      tbody td:nth-child(2)::before{ content:"Product"; color:var(--muted); font-size:12px; }
+      tbody td:nth-child(3)::before{ content:"Type";    color:var(--muted); font-size:12px; }
+      tbody td:nth-child(4)::before{ content:"Status";  color:var(--muted); font-size:12px; }
+      tbody td:nth-child(5)::before{ content:"User";    color:var(--muted); font-size:12px; }
+      tbody td:nth-child(6)::before{ content:"Reason";  color:var(--muted); font-size:12px; }
+      tbody td:nth-child(7)::before{ content:"Date";    color:var(--muted); font-size:12px; }
+
+      /* actions row on bottom */
+      tbody td:last-child{ padding-top:10px; gap:8px; flex-wrap:wrap; }
+      .actions{ gap:8px; }
+      .actions button{ flex:1 1 48%; padding:8px 10px; font-size:13px; }
+      .actions .btn-primary{ flex:1 1 100%; }
+
+      /* modals fit small screens */
+      dialog{ width:94vw; }
+      #bulkModal textarea#bulkText{ min-height:90px; }
+
+      /* prevent iOS zoom on focus */
+      input, select, textarea, button{ font-size:16px; }
+
+      /* Mobile: make Logout clearly visible and stop sticky toolbar */
+      /* Always show the logout action on mobile */
+      .user-menu{ display:block !important; }
+      .user-menu #userBtn{ display:none; } /* hide the toggle button */
+      .user-menu .dropdown{
+        display:block !important;
+        position: static;           /* place in flow with chips */
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+      }
+      .user-menu .dropdown button{
+        background: var(--panel-2);
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      /* Disable sticky toolbar on mobile so it doesn't follow while scrolling */
+      .toolbar{
+        position: static;
+        top: auto;
+        backdrop-filter: none;
+        background: transparent;
+        border: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Welcome/login overlay -->
+  <div id="welcomeScreen" aria-modal="true" role="dialog">
+    <div class="welcome-card">
+      <img src="./fs_logo_emoji.png" alt="Fatal Services Logo">
+      <h1>Fatal Services</h1>
+      <p>Key Manager — Login</p>
+      <form class="welcome-form" onsubmit="return attemptLogin(event)">
+        <!-- NEW: quick-pick user dropdown -->
+        <select id="loginPick" onchange="pickPresetUser(this.value)">
+          <option value="">Choose a user…</option>
+          <option value="UncleJoey">UncleJoey</option>
+          <option value="UncleG">UncleG</option>
+          <option value="UncleTrash">UncleTrash</option>
+          <option value="JXHNWACK">JXHNWACK</option>
+        </select>
+
+        <input id="loginUser" type="text" placeholder="Username" autocomplete="username">
+        <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+        <div class="welcome-actions">
+          <button type="submit" class="btn-primary">Continue</button>
+        </div>
+        <div id="welcomeError" class="welcome-error">Incorrect username or password.</div>
+      </form>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="logo" aria-label="Fatal Services logo"></div>
+      <div class="title">
+        <h1>Fatal Services — Key Manager</h1>
+        <p>A tool for staff to track and distribute keys provided by Fatal Services.</p>
+      </div>
+      <div class="right">
+        <!-- CHANGED: Offline uses red dot -->
+        <span class="chip"><span class="dot danger"></span>Offline</span>
+        <span id="cloudChip" class="chip" title="Cloud status"><span class="dot danger"></span>Cloud</span>
+        <!-- User menu (appears after login) -->
+        <div class="user-menu" id="userMenu">
+          <button onclick="toggleUserDropdown()" class="btn-ghost" id="userBtn">User ▾</button>
+          <div id="userDropdown" class="dropdown">
+            <button onclick="logout()">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="help">
+      <details>
+        <summary><strong>Quick start</strong> — Click here to expand to show you how to import the keys.</summary>
+        <ol>
+          <li>Click <strong>Bulk Add</strong> → choose product → paste one key per line → <strong>Add</strong>.</li>
+          <li>Use the tabs to filter by product. Search by code or user.</li>
+          <li>Click <strong>Assign</strong> on a key to set Discord user, reason, and date (defaults to today).</li>
+          <li>Use <strong>Export CSV</strong> for records and <strong>Backup JSON</strong>/<strong>Restore JSON</strong> to move devices.</li>
+        </ol>
+      </details>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="toolbar">
+      <div class="group search">
+        <input id="search" type="text" placeholder="Search keys, users, reason… (⌘/Ctrl + K)" style="flex:1" oninput="onSearchInput(this.value)" />
+        <div class="action-grid">
+          <div class="left-stack">
+            <button type="button" class="btn-ghost" onclick="onClearSearch()" title="Clear search">🧹 Clear</button>
+            <button type="button" class="btn-ghost" id="undoBtn" onclick="onUndo()" title="Undo last action" disabled>↩️ Undo</button>
+          </div>
+          <div class="right-row">
+            <button type="button" class="btn-ghost" onclick="onRefreshCloud()" title="Force re-fetch from cloud">🔄 Refresh</button>
+            <button type="button" class="btn-primary" onclick="onBulkAdd()" title="Add many keys quickly">📥 Bulk Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="group menu-wrap">
+        <button type="button" class="btn-primary" onclick="toggleManageMenu()" aria-haspopup="true" aria-expanded="false">Manage ▾</button>
+        <div id="manageMenu" class="dropdown" role="menu" aria-label="Manage actions">
+          <button type="button" class="item" onclick="onNewSingle()">➕ New Single</button>
+          <div class="divider"></div>
+          <button type="button" class="item" onclick="onExportCSV()">⬇️ Export CSV</button>
+          <button type="button" class="item" onclick="onBackupJSON()">💾 Backup JSON</button>
+          <label for="restoreJSON" class="item">⤴️ Import JSON to Cloud
+            <input id="restoreJSON" type="file" accept="application/json" onchange="onImportJSON(this.files && this.files[0])">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="tableWrap"></div>
+  </div>
+
+  <!-- Assign Modal -->
+  <dialog id="assignModal">
+    <form method="dialog">
+      <div class="modal-header">
+        <strong>Assign key</strong>
+        <button type="button" onclick="closeDialog('assignModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Key</label><input id="m_code" type="text" readonly></div>
+        <div class="field"><label>Product</label><input id="m_product" type="text" readonly></div>
+        <div class="field"><label>Discord user</label><input id="m_user" type="text" placeholder="@username or ID" required></div>
+        <div class="field"><label>Reason</label><input id="m_reason" type="text" placeholder="e.g. Promo, replacement, test" required></div>
+        <div class="field"><label>Date</label><input id="m_date" type="date" required></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeDialog('assignModal')">Cancel</button>
+        <button type="button" class="btn-primary" onclick="saveAssign()">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Bulk Add Modal -->
+  <dialog id="bulkModal">
+    <form method="dialog">
+      <div class="modal-header">
+        <strong>Bulk add keys</strong>
+        <button type="button" onclick="closeDialog('bulkModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Product</label>
+          <select id="bulkProduct">
+            <option value="Shadow">Shadow</option>
+            <option value="Black">Black</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Type</label>
+          <select id="bulkType"><option value="Day">Day</option><option value="Week">Week</option><option value="Month">Month</option><option value="Lifetime">Lifetime</option></select>
+        </div>
+        <div class="field">
+          <label>Paste keys (one per line)</label>
+          <textarea id="bulkText" placeholder="KEY-ABC-123&#10;KEY-DEF-456&#10;…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeDialog('bulkModal')">Cancel</button>
+        <button type="button" class="btn-primary" onclick="saveBulkAdd()">Add</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Single Add Modal -->
+  <dialog id="singleModal">
+    <form method="dialog">
+      <div class="modal-header">
+        <strong>New key</strong>
+        <button type="button" onclick="closeDialog('singleModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Product</label>
+          <select id="s_product"><option>Shadow</option><option>Black</option></select></div>
+        <div class="field"><label>Type</label>
+          <select id="s_type"><option>Day</option><option>Week</option><option>Month</option><option>Lifetime</option></select></div>
+        <div class="field"><label>Key code</label>
+          <input id="s_code" type="text" placeholder="Paste the actual code" required></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeDialog('singleModal')">Cancel</button>
+        <button type="button" class="btn-primary" onclick="saveSingleAdd()">Add</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    // ---------- helpers/state ----------
+    function $(q, el){ return (el||document).querySelector(q); }
+    function openDialog(id){ try{ document.getElementById(id).showModal(); }catch{ document.getElementById(id).setAttribute('open',''); } }
+    function closeDialog(id){ try{ document.getElementById(id).close(); }catch{ document.getElementById(id).removeAttribute('open'); } }
+
+    /* ======== CLOUD SYNC (Sheet.best) ======== */
+    // Use your Sheet.best URL:
+    const SHEETBEST_URL = 'https://api.sheetbest.com/sheets/cb0efcb6-cff3-45cf-8e5c-17e914ec9aa6';
+    const CLOUD_ENABLED = true; // flip to false to go back to pure local
+
+    async function cloudGetAll(){
+      const r = await fetch(SHEETBEST_URL, { cache:'no-store' });
+      if(!r.ok) throw new Error('Cloud fetch failed');
+      setCloudStatus(true);
+      return await r.json(); // array of rows (objects)
+    }
+    async function cloudAppend(rows){ // rows: array of objects
+      const r = await fetch(SHEETBEST_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(rows)
+      });
+      if(!r.ok){
+        const msg = await r.text().catch(()=>r.statusText);
+        console.error('Cloud append failed:', msg);
+        setCloudStatus(false, msg);
+        alert('Cloud append failed: ' + msg);
+        throw new Error('Cloud append failed');
+      }
+      setCloudStatus(true);
+    }
+    async function cloudPatchById(id, patch){ // patch: object
+      const r = await fetch(`${SHEETBEST_URL}/id/${encodeURIComponent(id)}`, {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(patch)
+      });
+      if(!r.ok){
+        const msg = await r.text().catch(()=>r.statusText);
+        console.error('Cloud patch failed:', msg);
+        setCloudStatus(false, msg);
+        alert('Cloud update failed: ' + msg);
+        throw new Error('Cloud patch failed');
+      }
+      setCloudStatus(true);
+    }
+    async function cloudDeleteById(id){
+      const r = await fetch(`${SHEETBEST_URL}/id/${encodeURIComponent(id)}`, {
+        method:'DELETE'
+      });
+      if(!r.ok){
+        const msg = await r.text().catch(()=>r.statusText);
+        console.error('Cloud delete failed:', msg);
+        setCloudStatus(false, msg);
+        alert('Cloud delete failed: ' + msg);
+        throw new Error('Cloud delete failed');
+      }
+      setCloudStatus(true);
+    }
+
+    // --- Cloud status UI ---
+    function setCloudStatus(ok, msg){
+      var chip = document.getElementById('cloudChip');
+      if(!chip) return;
+      var dot = chip.querySelector('.dot');
+      if(dot){
+        dot.classList.remove('ok','danger');
+        dot.classList.add(ok ? 'ok' : 'danger');
+      }
+      if(msg) chip.title = 'Cloud: ' + (ok ? 'OK' : 'Error') + ' — ' + msg;
+      else    chip.title = ok ? 'Cloud: OK' : 'Cloud: Error';
+    }
+
+    // --- Welcome/login + user menu ---
+    const USERS = {
+      'JXHNWACK': '1212',
+      'UncleJoey': 'password',
+      'UncleG': 'password',
+      'UncleTrash': 'password'
+    };
+
+    function pickPresetUser(name){
+      if(!name) return;
+      var uEl = document.getElementById('loginUser');
+      var pEl = document.getElementById('loginPass');
+      if(uEl) uEl.value = name;
+      var pw = (name === 'JXHNWACK') ? '1212' : 'password';
+      if(pEl) pEl.value = pw;
+      if(pEl) pEl.focus();
+    }
+
+    function attemptLogin(ev){
+      if(ev) ev.preventDefault();
+      var u = ($('#loginUser') && $('#loginUser').value.trim()) || '';
+      var p = ($('#loginPass') && $('#loginPass').value) || '';
+      if(USERS[u] && USERS[u] === p){
+        var el = document.getElementById('welcomeScreen');
+        if(el) el.style.display = 'none';
+        // reset scroll to top-left on mobile after login
+        window.scrollTo(0,0);
+        document.documentElement.scrollLeft = 0;
+        document.body.scrollLeft = 0;
+        try{
+          sessionStorage.setItem('fs_authed','1');
+          sessionStorage.setItem('fs_user', u);
+        }catch(e){}
+        var menu=document.getElementById('userMenu');
+        var btn=document.getElementById('userBtn');
+        if(menu) menu.style.display='inline-block';
+        if(btn) btn.textContent = u + ' ▾';
+        return false;
+      }else{
+        var err = document.getElementById('welcomeError');
+        if(err) err.style.display = 'block';
+        return false;
+      }
+    }
+    (function(){
+      try{
+        if(sessionStorage.getItem('fs_authed') === '1'){
+          var el=document.getElementById('welcomeScreen');
+          if(el) el.style.display='none';
+          var u=sessionStorage.getItem('fs_user')||'User';
+          var menu=document.getElementById('userMenu');
+          var btn=document.getElementById('userBtn');
+          if(menu) menu.style.display='inline-block';
+          if(btn) btn.textContent = u + ' ▾';
+        }
+      }catch(e){}
+    })();
+
+    function toggleUserDropdown(){
+      var dd=document.getElementById('userDropdown');
+      if(dd) dd.style.display = (dd.style.display==='block'?'none':'block');
+    }
+    function logout(){
+      try{ sessionStorage.removeItem('fs_authed'); sessionStorage.removeItem('fs_user'); }catch(e){}
+      location.reload();
+    }
+    function toggleManageMenu(){
+      var m = document.getElementById('manageMenu');
+      if(!m) return;
+      var isOpen = m.style.display === 'block';
+      m.style.display = isOpen ? 'none' : 'block';
+    }
+    // close manage menu when clicking outside
+    document.addEventListener('click', function(e){
+      var wrap = document.querySelector('.menu-wrap');
+      var menu = document.getElementById('manageMenu');
+      if(!wrap || !menu) return;
+      if(!wrap.contains(e.target)){
+        if(menu.style.display==='block') menu.style.display='none';
+      }
+    });
+
+    const STORAGE_KEY='fs-key-manager-v1';
+    const state={ keys:[], filterProduct:'All', search:'' };
+    // sorting & preferences
+    state.sortKey = state.sortKey || '';
+    state.sortDir = state.sortDir || 'asc'; // 'asc' | 'desc'
+    /* --- Theme (fixed to dark) --- */
+    function applyTheme(){
+      // Force dark theme: ensure :root has no .light class
+      document.documentElement.classList.remove('light');
+    }
+    function sortRows(rows){
+      const key = state.sortKey;
+      if(!key) return rows;
+      const dir = state.sortDir === 'desc' ? -1 : 1;
+
+      function val(k){
+        if(key==='date'){
+          return (k.date ? new Date(k.date).getTime() : 0);
+        }
+        if(key==='assignedTo'){
+          return (k.assignedTo || '').toLowerCase();
+        }
+        if(key==='product'){
+          return (k.product || '').toLowerCase();
+        }
+        return (k[key] || '').toString().toLowerCase();
+      }
+      return rows.slice().sort((a,b)=>{
+        const va = val(a), vb = val(b);
+        if(va<vb) return -1*dir;
+        if(va>vb) return  1*dir;
+        return 0;
+      });
+    }
+
+    function sortCaret(k){
+      if(state.sortKey!==k) return '<span class="caret">↕︎</span>';
+      return '<span class="caret">'+(state.sortDir==='asc'?'▲':'▼')+'</span>';
+    }
+    function setSort(k){
+      if(state.sortKey===k){
+        state.sortDir = (state.sortDir==='asc' ? 'desc' : 'asc');
+      }else{
+        state.sortKey = k;
+        state.sortDir = 'asc';
+      }
+      render();
+    }
+
+    // ---- Undo stack ----
+    const UNDO_STACK = [];
+    function updateUndoUI(){
+      var b=document.getElementById('undoBtn');
+      if(!b) return;
+      b.disabled = UNDO_STACK.length===0;
+    }
+    function pushUndo(entry){
+      UNDO_STACK.push(entry);
+      updateUndoUI();
+    }
+    async function onUndo(){
+      const last = UNDO_STACK.pop();
+      updateUndoUI();
+      if(!last) return;
+      // Each undo entry has {type, payload}
+      try{
+        if(last.type==='add'){ // remove the items that were just added
+          const ids = last.payload.ids || [];
+          if(CLOUD_ENABLED){
+            for(const id of ids){ await cloudDeleteById(id); }
+            await load();
+          }else{
+            state.keys = state.keys.filter(k=>!ids.includes(k.id));
+            await save();
+          }
+        }else if(last.type==='delete'){ // re-add deleted items
+          const items = last.payload.items || [];
+          if(CLOUD_ENABLED){
+            await cloudAppend(items);
+            await load();
+          }else{
+            state.keys.unshift(...items);
+            await save();
+          }
+        }else if(last.type==='assign' || last.type==='release'){ // restore previous snapshot
+          const prev = last.payload.prev;
+          if(!prev) return;
+          if(CLOUD_ENABLED){
+            await cloudPatchById(prev.id, {
+              code: prev.code, product: prev.product, type: prev.type,
+              status: prev.status, assignedTo: prev.assignedTo,
+              reason: prev.reason, date: prev.date, assignedBy: prev.assignedBy || ''
+            });
+            await load();
+          }else{
+            const idx = state.keys.findIndex(x=>x.id===prev.id);
+            if(idx>-1){ state.keys[idx]=Object.assign({}, prev); }
+            await save();
+          }
+        }
+      }catch(e){
+        console.error('Undo failed', e);
+        alert('Undo failed: '+ (e && e.message ? e.message : e));
+      }
+    }
+
+    function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(2); }
+    async function save(renderAfter=true){
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+      if(renderAfter) render();
+    }
+    async function load(){
+      if(CLOUD_ENABLED){
+        try{
+          const rows = await cloudGetAll();
+          state.keys = rows.map(r => ({
+            id: r.id || uid(),
+            code: r.code || '',
+            product: r.product || '',
+            type: r.type || 'Day',
+            status: r.status || 'available',
+            assignedTo: r.assignedTo || '',
+            reason: r.reason || '',
+            date: r.date || '',
+            assignedBy: r.assignedBy || ''
+          }));
+          setCloudStatus(true);
+          return render();
+        }catch(err){
+          setCloudStatus(false, String(err && err.message || err));
+          console.warn('Cloud load failed, falling back to localStorage', err);
+        }
+      }
+      try{
+        const raw=localStorage.getItem(STORAGE_KEY);
+        if(raw){ Object.assign(state, JSON.parse(raw)); }
+      }catch(e){}
+      render();
+    }
+
+    // ---------- tabs & filtering ----------
+    function renderTabs(){
+      const available = state.keys.filter(k=>k.status==='available');
+      const byProd = available.reduce((a,k)=>{ a[k.product]=(a[k.product]||0)+1; return a; },{});
+      const allCount = available.length;
+      const assignedCount = state.keys.filter(k=>k.status==='assigned' || k.status==='expired').length;
+
+      const tabs = ['All','Shadow','Black','Assigned'].map(p=>{
+        let c=0, dot='ok';
+        if(p==='All') c = allCount;
+        else if(p==='Assigned'){ c = assignedCount; dot='warn'; }
+        else c = (byProd[p]||0);
+        return '<div class="tab '+(state.filterProduct===p?'active':'')+'" onclick="setFilter(\''+p+'\')">'+
+                 p+' <span class="chip"><span class="dot '+dot+'"></span>'+c+'</span></div>';
+      }).join('');
+      $('#tabs').innerHTML = tabs;
+    }
+    function setFilter(p){ state.filterProduct=p; render(); }
+
+    function visibleRows(){
+      const inAssigned = state.filterProduct==='Assigned';
+      const q=(state.search||'').toLowerCase();
+      return state.keys.filter(k=>{
+        const assignedish=(k.status==='assigned'||k.status==='expired');
+        const statusOk = inAssigned ? assignedish : (k.status==='available');
+        const productOk = state.filterProduct==='All' || state.filterProduct==='Assigned' || k.product===state.filterProduct;
+        const hay=[k.code,k.product,k.type,k.status,k.assignedTo||'',k.reason||'',k.date||''].join(' ').toLowerCase();
+        return statusOk && productOk && (!q || hay.indexOf(q)!==-1);
+      });
+    }
+
+    // ---------- actions ----------
+    function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.clipboard){ navigator.clipboard.writeText(k.code); } }
+    async function removeKey(id){
+      if(!confirm('Delete this key from your list?')) return;
+      const k=state.keys.find(x=>x.id===id); if(!k) return;
+
+      // push undo snapshot
+      pushUndo({ type:'delete', payload:{ items:[ Object.assign({}, k) ] } });
+
+      if(CLOUD_ENABLED){
+        await cloudDeleteById(k.id);
+        await load();
+        return;
+      }
+
+      state.keys=state.keys.filter(k=>k.id!==id); save();
+    }
+    async function releaseKey(id){
+      const k=state.keys.find(x=>x.id===id); if(!k) return;
+      // capture previous state for undo
+      const prev = Object.assign({}, k);
+      pushUndo({ type:'release', payload:{ prev } });
+      const patch = { status:'available', assignedTo:'', reason:'', date:'', assignedBy:'' };
+
+      if(CLOUD_ENABLED){
+        await cloudPatchById(k.id, patch);
+        await load();
+        return;
+      }
+
+      Object.assign(k, patch);
+      save();
+    }
+
+    let assignId=null;
+    function openAssign(id){
+      const k=state.keys.find(x=>x.id===id); if(!k) return;
+      assignId=id;
+      $('#m_code').value=k.code; $('#m_product').value=k.product;
+      $('#m_user').value=k.assignedTo||''; $('#m_reason').value=k.reason||'';
+      $('#m_date').value=k.date||new Date().toISOString().slice(0,10);
+      openDialog('assignModal');
+    }
+    async function saveAssign(){
+      const k=state.keys.find(x=>x.id===assignId); if(!k) return;
+      // capture previous state for undo
+      const prev = Object.assign({}, k);
+      pushUndo({ type:'assign', payload:{ prev } });
+      const patch = {
+        assignedTo: $('#m_user').value.trim(),
+        reason: $('#m_reason').value.trim(),
+        date: $('#m_date').value,
+        status: 'assigned'
+      };
+      try{
+        const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
+        patch.assignedBy = currentUser;
+      }catch(e){}
+
+      if(CLOUD_ENABLED){
+        await cloudPatchById(k.id, patch);
+        closeDialog('assignModal');
+        await load();
+        return;
+      }
+
+      Object.assign(k, patch);
+      closeDialog('assignModal'); save();
+    }
+
+    // ---------- CSV / backup / restore ----------
+    function csvEscape(v){
+      v=String(v);
+      if(v.includes('"')) v=v.replace(/"/g,'""');
+      if(v.includes(',')||v.includes('\n')||v.includes('"')) v='"'+v+'"';
+      return v;
+    }
+    function toCSV(rows){
+      const headers=['code','product','type','status','assignedTo','reason','date','assignedBy'];
+      const out=[headers.join(',')];
+      for(const k of rows){
+        out.push(headers.map(h=>csvEscape(k[h]||'')).join(','));
+      }
+      return out.join('\n');
+    }
+    function onExportCSV(){
+      const blob=new Blob([toCSV(state.keys)],{type:'text/csv;charset=utf-8;'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='fatal_keys_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+    }
+    function onBackupJSON(){
+      const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='fatal_keys_backup.json'; a.click();
+    }
+    function onRestoreJSON(file){
+      if(!file) return;
+      const r=new FileReader();
+      r.onload=()=>{
+        try{
+          const incoming=JSON.parse(r.result);
+          if(Array.isArray(incoming.keys)){
+            state.keys=incoming.keys;
+            state.filterProduct=incoming.filterProduct||'All';
+            state.search='';
+            save();
+          }else{ alert('Invalid backup file.'); }
+        }catch(e){ alert('Could not read JSON backup.'); }
+      };
+      r.readAsText(file);
+    }
+
+    async function onImportJSON(file){
+      if(!file) return;
+      const r = new FileReader();
+      r.onload = async () => {
+        try{
+          const raw = JSON.parse(r.result);
+          // Accept either {keys:[...]} shape or a raw array
+          const rowsIn = Array.isArray(raw) ? raw
+                       : (raw && Array.isArray(raw.keys) ? raw.keys : null);
+          if(!rowsIn){ alert('Invalid JSON format. Expecting an array of rows or an object with a "keys" array.'); return; }
+
+          // Build current code set to skip duplicates (case-insensitive)
+          await load(); // ensure we have latest before importing
+          const existing = new Set((state.keys||[]).map(k => String(k.code||'').toLowerCase()));
+
+          const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
+          const toPost = [];
+          const skipped = [];
+
+          for(const r of rowsIn){
+            const code = String(r.code||'').trim();
+            if(!code){ continue; }
+            const key = code.toLowerCase();
+            if(existing.has(key)){ skipped.push(code); continue; }
+
+            const row = {
+              id: r.id || uid(),
+              code: code,
+              product: r.product || 'Shadow',
+              type: r.type || 'Day',
+              status: r.status || 'available',
+              assignedTo: r.assignedTo || '',
+              reason: r.reason || '',
+              date: r.date || '',
+              assignedBy: r.assignedBy || currentUser
+            };
+            toPost.push(row);
+            existing.add(key);
+          }
+
+          if(toPost.length===0){
+            alert(skipped.length ? 'All rows were duplicates—nothing imported.' : 'Nothing to import.');
+            return;
+          }
+
+          if(CLOUD_ENABLED){
+            await cloudAppend(toPost);
+            await load();
+          }else{
+            state.keys.unshift(...toPost);
+            await save();
+          }
+
+          let msg = 'Imported '+toPost.length+' row(s).';
+          if(skipped.length){ msg += '\nSkipped duplicates: '+skipped.length; }
+          alert(msg);
+        }catch(e){
+          console.error('Import failed', e);
+          alert('Import failed: '+(e && e.message ? e.message : e));
+        }
+      };
+      r.readAsText(file);
+    }
+
+    // ---------- render ----------
+    function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+    function renderTable(){
+      const rows=visibleRows();
+      const sorted = sortRows(rows);
+      if(!rows.length){ $('#tableWrap').innerHTML='<div class="empty">No keys yet. Use <strong>Bulk Add</strong> to paste your list, or <strong>New Single</strong> to add one.</div>'; return; }
+      const head = '<thead><tr>'
+        + '<th>Key</th>'
+        + '<th class="sortable" onclick="setSort(\'product\')">Product'+sortCaret('product')+'</th>'
+        + '<th>Type</th>'
+        + '<th>Status</th>'
+        + '<th class="sortable" onclick="setSort(\'assignedTo\')">Discord User'+sortCaret('assignedTo')+'</th>'
+        + '<th>Reason</th>'
+        + '<th class="sortable" onclick="setSort(\'date\')">Date'+sortCaret('date')+'</th>'
+        + '<th>Actions</th>'
+        + '</tr></thead>';
+      const body=sorted.map(k=>{
+        const assignedish=(k.status==='assigned'||k.status==='expired');
+        const chip=assignedish
+          ? '<span class="chip" title="Assigned by '+escapeHtml(k.assignedBy||'unknown')+'"><span class="dot warn"></span>Assigned</span>'
+          : '<span class="chip"><span class="dot ok"></span>Available</span>';
+        return '<tr>'
+          + '<td class="key-cell" onclick="copyCode(\''+k.id+'\')" title="Click to copy">'+escapeHtml(k.code)+'</td>'
+          + '<td>'+k.product+'</td>'
+          + '<td><span class="badge '+escapeHtml(k.type)+'">'+escapeHtml(k.type)+'</span></td>'
+          + '<td>'+chip+'</td>'
+          + '<td>'+escapeHtml(k.assignedTo||'')+'</td>'
+          + '<td>'+escapeHtml(k.reason||'')+'</td>'
+          + '<td>'+(k.date||'')+'</td>'
+          + '<td class="actions">'
+            + '<button type="button" onclick="copyCode(\''+k.id+'\')">Copy</button>'
+            + (assignedish
+              ? '<button type="button" onclick="openAssign(\''+k.id+'\')">Edit</button><button type="button" onclick="releaseKey(\''+k.id+'\')">Release</button>'
+              : '<button type="button" class="btn-primary" onclick="openAssign(\''+k.id+'\')">Assign</button>')
+            + '<button type="button" onclick="removeKey(\''+k.id+'\')" style="border-color: rgba(239,71,111,.5);">Delete</button>'
+          + '</td></tr>';
+      }).join('');
+      $('#tableWrap').innerHTML='<table>'+head+'<tbody>'+body+'</tbody></table>';
+    }
+    function render(){
+      renderTabs();
+      renderTable();
+      var inp = document.getElementById('search');
+      if(inp && inp.value !== state.search){ inp.value = state.search; }
+    }
+
+    // ---------- toolbar handlers ----------
+    function onSearchInput(val){
+      state.search = (val || '');
+      render();
+    }
+    function onClearSearch(){ state.search=''; $('#search').value=''; render(); }
+    function onRefreshCloud(){
+      if (typeof CLOUD_ENABLED !== 'undefined' && CLOUD_ENABLED){
+        load(); // re-fetch from cloud and re-render
+      }else{
+        alert('Cloud sync is disabled. Set CLOUD_ENABLED = true to use Refresh.');
+      }
+    }
+    function onClearLocalCache(){
+      try{
+        localStorage.removeItem(STORAGE_KEY);
+        alert('Local cache cleared. The page will reload.');
+      }catch(e){}
+      location.reload();
+    }
+    function onBulkAdd(){ $('#bulkProduct').value=(state.filterProduct==='All'||state.filterProduct==='Assigned')?'Shadow':state.filterProduct; $('#bulkType').value='Day'; $('#bulkText').value=''; openDialog('bulkModal'); }
+    function onNewSingle(){ $('#s_product').value=(state.filterProduct==='All'||state.filterProduct==='Assigned')?'Shadow':state.filterProduct; $('#s_type').value='Day'; $('#s_code').value=''; openDialog('singleModal'); }
+    async function saveBulkAdd(){
+      const product=$('#bulkProduct').value;
+      const type=$('#bulkType').value;
+      const allExisting = new Set(state.keys.map(k=>String(k.code||'').toLowerCase()));
+      const inputCodes = ($('#bulkText').value||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+
+      const newCodes = [];
+      const skipped = [];
+      for(const c of inputCodes){
+        const key = c.toLowerCase();
+        if(allExisting.has(key)){ skipped.push(c); } else { newCodes.push(c); allExisting.add(key); }
+      }
+      if(skipped.length){
+        alert('Skipped duplicates:\n' + skipped.join('\n'));
+      }
+      if(newCodes.length===0){ closeDialog('bulkModal'); return; }
+
+      if(CLOUD_ENABLED){
+        const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
+        const rows = newCodes.map(code => {
+          const id = uid();
+          return { id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser };
+        });
+        await cloudAppend(rows);
+        // store undo (ids we just created)
+        pushUndo({ type:'add', payload:{ ids: rows.map(r=>r.id) } });
+        closeDialog('bulkModal');
+        await load();
+        return;
+      }
+
+      const newItems=newCodes.map(code=>({id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''}));
+      state.keys.unshift(...newItems);
+      // undo for local add
+      pushUndo({ type:'add', payload:{ ids: newItems.map(r=>r.id) } });
+      closeDialog('bulkModal'); save();
+    }
+    async function saveSingleAdd(){
+      const code=($('#s_code').value||'').trim(); if(!code) return;
+      const product=$('#s_product').value;
+      const type=$('#s_type').value;
+
+      // duplicate guard
+      const exists = state.keys.some(k => String(k.code||'').toLowerCase() === code.toLowerCase());
+      if(exists){ alert('That code already exists and was not added.'); return; }
+
+      if(CLOUD_ENABLED){
+        const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
+        const id = uid();
+        await cloudAppend([{
+          id, code, product, type,
+          status:'available',
+          assignedTo:'', reason:'', date:'', assignedBy: nowUser
+        }]);
+        // undo for cloud add
+        pushUndo({ type:'add', payload:{ ids:[id] } });
+        closeDialog('singleModal');
+        await load();
+        return;
+      }
+
+      const item={id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''};
+      state.keys.unshift(item);
+      // undo for local add
+      pushUndo({ type:'add', payload:{ ids:[item.id] } });
+      closeDialog('singleModal'); save();
+    }
+
+    // expose for inline attributes
+window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign;
+window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
+window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
+window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
+window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser;
+window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
+window.onUndo=onUndo;
+window.toggleManageMenu=toggleManageMenu;
+window.setSort=setSort;
+
+    // keyboard shortcut for Undo
+    document.addEventListener('keydown', function(e){
+      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='z'){
+        e.preventDefault();
+        onUndo();
+      }
+    });
+
+    // init
+    (function(){
+      applyTheme();
+      load();
+      if(!Array.isArray(state.keys)) state.keys=[];
+      render();
+      // ensure we start at top-left on first load
+      window.scrollTo(0,0);
+      document.documentElement.scrollLeft = 0;
+      document.body.scrollLeft = 0;
+    })();
+  </script>
+</body>
+</html>
