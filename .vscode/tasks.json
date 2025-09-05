@@ -4,12 +4,10 @@
     {
       "label": "Push to GitHub Pages",
       "type": "shell",
-      "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main); \
-git fetch origin && \
-git pull --rebase --autostash origin \"$BRANCH\" || true; \
-git add . && git commit -m 'Quick update' || echo 'No changes to commit'; \
-git push origin \"$BRANCH\"",
-      "problemMatcher": []
+      "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main); git fetch origin || true; git pull --rebase --autostash origin \"$BRANCH\" || true; git add -A; if ! git diff --cached --quiet; then git commit -m \"Quick update $(date '+%Y-%m-%d %H:%M:%S')\"; else echo \"No changes to commit\"; fi; git push origin \"$BRANCH\"",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
     }
   ]
 }
