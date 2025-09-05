@@ -1005,6 +1005,8 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
       var p = (document.getElementById('loginPass') ? document.getElementById('loginPass').value : '');
       if(USERS[u] && USERS[u] === p){
         stopLoginRotator();
+        var greet = document.querySelector('#welcomeScreen .welcome-greeting');
+        if(greet){ greet.textContent = 'WELCOME ' + u.toUpperCase(); }
         var el = document.getElementById('welcomeScreen');
         var logoImg = el ? el.querySelector('.welcome-card img') : null;
         var btn = document.getElementById('loginGo');
