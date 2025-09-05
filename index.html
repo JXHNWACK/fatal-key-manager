@@ -160,6 +160,15 @@
     details[open]{background:rgba(255,255,255,.05)}
     summary{cursor:pointer}
     code{background:rgba(0,0,0,.35); padding:2px 6px; border-radius:6px}
+/* ===== Banner (errors) & Toast (success/info) ===== */
+#banner{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:10000;display:none}
+#banner .msg{background:linear-gradient(180deg,rgba(239,71,111,.95),rgba(239,71,111,.88));color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 24px rgba(239,71,111,.35);border:1px solid rgba(255,255,255,.12);font-size:14px;letter-spacing:.2px}
+#toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:10000;display:none}
+#toast .msg{background:linear-gradient(180deg,rgba(6,214,160,.95),rgba(6,214,160,.88));color:#071216;padding:8px 12px;border-radius:999px;box-shadow:0 10px 24px rgba(6,214,160,.30);border:1px solid rgba(0,0,0,.10);font-weight:700;font-size:13px}
+
+/* Animated tab underline */
+.tabs{position:relative}
+.tab-underline{position:absolute;bottom:-4px;height:3px;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transform:translateX(0);transition:transform .25s ease,width .25s ease,opacity .25s ease;opacity:.95;pointer-events:none;z-index:2}
 
     /* Welcome/login overlay (isolated) */
     #welcomeScreen{
