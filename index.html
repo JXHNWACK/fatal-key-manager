@@ -185,12 +185,32 @@
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
 
-    .ok-tick {
-      display: none;
-      color: var(--ok);
-      font-weight: 700;
-      font-size: 14px;
-      margin-left: 4px;
+
+    /* --- Login success glow on the welcome logo --- */
+    .welcome-card img.login-pulse{
+      animation: login-glow 1.2s ease-in-out 1;
+    }
+    @keyframes login-glow{
+      0%   { filter:none; box-shadow:0 0 22px rgba(105,207,218,.35); }
+      50%  { filter:brightness(1.08) saturate(1.05); box-shadow:0 0 44px rgba(105,207,218,.75); }
+      100% { filter:none; box-shadow:0 0 22px rgba(105,207,218,.35); }
+    }
+    /* Respect reduced-motion */
+    @media (prefers-reduced-motion: reduce){
+      .welcome-card img.login-pulse{ animation:none; }
+    }
+
+    /* --- Wrong password shake --- */
+    .welcome-card.shake{ animation: shake .4s ease; }
+    @keyframes shake{
+      0%,100%{ transform:translateX(0); }
+      20%{ transform:translateX(-6px); }
+      40%{ transform:translateX(6px); }
+      60%{ transform:translateX(-4px); }
+      80%{ transform:translateX(4px); }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .welcome-card.shake{ animation:none; }
     }
 
     /* User menu (header) */
@@ -584,7 +604,6 @@ dialog::backdrop{
           <option value="UncleTrash">UncleTrash</option>
           <option value="JXHNWACK">JXHNWACK</option>
         </select>
-        <span id="loginTick" class="ok-tick" title="Ready">✓</span>
 
         <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
         <div class="welcome-actions">
@@ -846,23 +865,37 @@ function pickPresetUser(name){
       var p = (document.getElementById('loginPass') ? document.getElementById('loginPass').value : '');
       if(USERS[u] && USERS[u] === p){
         var el = document.getElementById('welcomeScreen');
-        if(el) el.style.display = 'none';
-        // reset scroll to top-left on mobile after login
-        window.scrollTo(0,0);
-        document.documentElement.scrollLeft = 0;
-        document.body.scrollLeft = 0;
-        try{
-          sessionStorage.setItem('fs_authed','1');
-          sessionStorage.setItem('fs_user', u);
-        }catch(e){}
-        var menu=document.getElementById('userMenu');
-        var btn=document.getElementById('userBtn');
-        if(menu) menu.style.display='inline-block';
-        if(btn) btn.textContent = u + ' ▾';
+        var logoImg = el ? el.querySelector('.welcome-card img') : null;
+        var btn = document.getElementById('loginGo');
+        if(btn){ btn.disabled = true; btn.textContent = 'Signing in…'; }
+        if(logoImg){ logoImg.classList.add('login-pulse'); }
+
+        // after 1.2s, finish login and hide overlay
+        setTimeout(function(){
+          if(el) el.style.display = 'none';
+          // reset scroll to top-left on mobile after login
+          window.scrollTo(0,0);
+          document.documentElement.scrollLeft = 0;
+          document.body.scrollLeft = 0;
+          try{
+            sessionStorage.setItem('fs_authed','1');
+            sessionStorage.setItem('fs_user', u);
+          }catch(e){}
+          var menu=document.getElementById('userMenu');
+          var btnU=document.getElementById('userBtn');
+          if(menu) menu.style.display='inline-block';
+          if(btnU) btnU.textContent = u + ' ▾';
+        }, 1200);
         return false;
       }else{
         var err = document.getElementById('welcomeError');
         if(err) err.style.display = 'block';
+        var card = document.querySelector('#welcomeScreen .welcome-card');
+        if(card){
+          card.classList.remove('shake'); // restart animation if repeated
+          void card.offsetWidth;          // reflow
+          card.classList.add('shake');
+        }
         return false;
       }
     }
@@ -1413,8 +1446,6 @@ window.setSort=setSort;
       var hasUser = !!(pick && pick.value);
       var hasPass = !!(pass && pass.value && pass.value.length>0);
       btn.disabled = !(hasUser && hasPass);
-      var tick = document.getElementById('loginTick');
-      if(tick) tick.style.display = (hasUser && hasPass) ? 'inline' : 'none';
     }
 
     // Keep button/tick state in sync
