@@ -185,6 +185,40 @@
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
 
+    /* Big greeting above logo */
+    .welcome-greeting{
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: var(--text);
+      opacity: .95;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+      text-align: center;
+      text-shadow: 0 0 16px rgba(105,207,218,.25);
+      animation: greet-glow 2.8s ease-in-out infinite;
+    }
+    @keyframes greet-glow{
+      0%,100%{ text-shadow: 0 0 12px rgba(105,207,218,.20); opacity:.95; }
+      50%    { text-shadow: 0 0 20px rgba(105,207,218,.45); opacity:1; }
+    }
+
+    /* Rotating helper messages under Continue */
+    .welcome-rotate{
+      min-height: 18px; /* reserve line so layout doesn't shift */
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      animation: rot-fade 600ms ease;
+    }
+    @keyframes rot-fade{ from{ opacity:0; transform: translateY(4px);} to{ opacity:1; transform:none; } }
+
+    @media (prefers-reduced-motion: reduce){
+      .welcome-greeting{ animation: none; }
+      .welcome-rotate{ animation: none; }
+    }
+
 
     /* --- Login success glow on the welcome logo (longer + brighter) --- */
     .welcome-card img.login-pulse{
@@ -606,6 +640,7 @@ dialog::backdrop{
   <!-- Welcome/login overlay -->
   <div id="welcomeScreen" aria-modal="true" role="dialog">
     <div class="welcome-card">
+      <div class="welcome-greeting" aria-hidden="true">WELCOME</div>
       <img src="./fs_logo_emoji.png" alt="Fatal Services Logo">
       <div id="loginProgress" class="login-progress" aria-hidden="true"><div class="bar"></div></div>
       <h1>Fatal Services</h1>
@@ -624,6 +659,7 @@ dialog::backdrop{
         <div class="welcome-actions">
           <button id="loginGo" type="submit" class="btn-primary" disabled>Continue</button>
         </div>
+        <div id="loginRotator" class="welcome-rotate" aria-live="polite"></div>
         <div id="welcomeError" class="welcome-error">Incorrect username or password.</div>
       </form>
     </div>
@@ -872,6 +908,27 @@ function pickPresetUser(name){
   if(pEl) pEl.focus();
 }
 
+// Rotating login helper messages
+var __rotTimer = null;
+var __rotMsgs = [
+  'Welcome to Fatal Services',
+  'Securely manage your keys',
+  'Staff access only'
+];
+var __rotIdx = 0;
+function startLoginRotator(){
+  var el = document.getElementById('loginRotator');
+  if(!el) return;
+  el.textContent = __rotMsgs[__rotIdx % __rotMsgs.length];
+  clearInterval(__rotTimer);
+  __rotTimer = setInterval(function(){
+    __rotIdx++; el.textContent = __rotMsgs[__rotIdx % __rotMsgs.length];
+    // retrigger fade animation
+    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  }, 3000);
+}
+function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTimer = null; } }
+
     function attemptLogin(ev){
       if(ev) ev.preventDefault();
       var u = (document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim() : '') 
@@ -879,6 +936,7 @@ function pickPresetUser(name){
               || '';
       var p = (document.getElementById('loginPass') ? document.getElementById('loginPass').value : '');
       if(USERS[u] && USERS[u] === p){
+        stopLoginRotator();
         var el = document.getElementById('welcomeScreen');
         var logoImg = el ? el.querySelector('.welcome-card img') : null;
         var btn = document.getElementById('loginGo');
@@ -1494,6 +1552,7 @@ window.setSort=setSort;
     // init
     (function(){
       applyTheme();
+      startLoginRotator();
       setNetStatus(navigator.onLine);
       load();
       if(!Array.isArray(state.keys)) state.keys=[];
