@@ -185,6 +185,14 @@
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
 
+    .ok-tick {
+      display: none;
+      color: var(--ok);
+      font-weight: 700;
+      font-size: 14px;
+      margin-left: 4px;
+    }
+
     /* User menu (header) */
     .user-menu{position:relative; display:none; margin-left:12px;}
     .user-menu .dropdown{
@@ -576,10 +584,11 @@ dialog::backdrop{
           <option value="UncleTrash">UncleTrash</option>
           <option value="JXHNWACK">JXHNWACK</option>
         </select>
+        <span id="loginTick" class="ok-tick" title="Ready">✓</span>
 
         <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
         <div class="welcome-actions">
-          <button type="submit" class="btn-primary">Continue</button>
+          <button id="loginGo" type="submit" class="btn-primary" disabled>Continue</button>
         </div>
         <div id="welcomeError" class="welcome-error">Incorrect username or password.</div>
       </form>
@@ -594,8 +603,8 @@ dialog::backdrop{
         <p>A tool for staff to track and distribute keys provided by Fatal Services.</p>
       </div>
       <div class="right">
-        <!-- CHANGED: Offline uses red dot -->
-        <span class="chip"><span class="dot danger"></span>Offline</span>
+        <!-- CHANGED: Offline uses red dot, now dynamic -->
+        <span id="netChip" class="chip"><span class="dot danger"></span><span id="netText">Offline</span></span>
         <span id="cloudChip" class="chip" title="Cloud status"><span class="dot danger"></span>Cloud</span>
         <!-- User menu (appears after login) -->
         <div class="user-menu" id="userMenu">
@@ -796,7 +805,23 @@ dialog::backdrop{
       }
       if(msg) chip.title = 'Cloud: ' + (ok ? 'OK' : 'Error') + ' — ' + msg;
       else    chip.title = ok ? 'Cloud: OK' : 'Cloud: Error';
+      if(ok) setNetStatus(true);
     }
+
+    // --- Network status (Online/Offline) chip ---
+    function setNetStatus(on){
+      var chip = document.getElementById('netChip');
+      if(!chip) return;
+      var dot = chip.querySelector('.dot');
+      if(dot){
+        dot.classList.remove('ok','danger');
+        dot.classList.add(on ? 'ok' : 'danger');
+      }
+      var t = document.getElementById('netText');
+      if(t) t.textContent = on ? 'Online' : 'Offline';
+    }
+    window.addEventListener('online',  function(){ setNetStatus(true);  });
+    window.addEventListener('offline', function(){ setNetStatus(false); });
 
     // --- Welcome/login + user menu ---
     const USERS = {
@@ -1382,6 +1407,7 @@ window.setSort=setSort;
     // init
     (function(){
       applyTheme();
+      setNetStatus(navigator.onLine);
       load();
       if(!Array.isArray(state.keys)) state.keys=[];
       render();
@@ -1393,3 +1419,25 @@ window.setSort=setSort;
   </script>
 </body>
 </html>
+    // Enable the Continue button only when a user is chosen and a password is typed
+    function toggleLoginButton(){
+      var pick = document.getElementById('loginPick');
+      var pass = document.getElementById('loginPass');
+      var btn  = document.getElementById('loginGo');
+      if(!btn) return;
+      var hasUser = !!(pick && pick.value);
+      var hasPass = !!(pass && pass.value && pass.value.length>0);
+      btn.disabled = !(hasUser && hasPass);
+
+      // show/hide the green tick
+      var tick = document.getElementById('loginTick');
+      if(tick) tick.style.display = (hasUser && hasPass) ? 'inline' : 'none';
+    }
+    // Bind listeners once DOM is ready
+    document.addEventListener('DOMContentLoaded', function(){
+      var pick = document.getElementById('loginPick');
+      var pass = document.getElementById('loginPass');
+      if(pick) pick.addEventListener('change', toggleLoginButton);
+      if(pass) pass.addEventListener('input', toggleLoginButton);
+      toggleLoginButton();
+    });
