@@ -636,7 +636,9 @@ dialog::backdrop{
   </style>
 </head>
 <body>
-
+<!-- Global banner & toast (non-blocking UI) -->
+<div id="banner" aria-live="polite"></div>
+<div id="toast" aria-live="polite"></div>
   <!-- Welcome/login overlay -->
   <div id="welcomeScreen" aria-modal="true" role="dialog">
     <div class="welcome-card">
