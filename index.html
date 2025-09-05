@@ -197,16 +197,18 @@
 
     /* Big greeting above logo */
     .welcome-greeting{
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      color: var(--text);
-      opacity: .95;
-      margin: 0 0 10px 0;
-      text-transform: uppercase;
-      text-align: center;
-      text-shadow: 0 0 16px rgba(105,207,218,.25);
-      animation: greet-glow 2.8s ease-in-out infinite;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--text);
+  opacity: 0; /* start hidden */
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 0 16px rgba(105,207,218,.25);
+  animation: greet-glow 2.8s ease-in-out infinite;
+  transition: opacity .8s ease; /* fade in after login */
+}
     }
     @keyframes greet-glow{
       0%,100%{ text-shadow: 0 0 12px rgba(105,207,218,.20); opacity:.95; }
@@ -669,7 +671,7 @@ dialog::backdrop{
   <!-- Welcome/login overlay -->
   <div id="welcomeScreen" aria-modal="true" role="dialog">
     <div class="welcome-card">
-      <div class="welcome-greeting" aria-hidden="true">WELCOME</div>
+      <div class="welcome-greeting" aria-hidden="true" style="display:none; opacity:0;"></div>
       <img src="./fs_logo_emoji.png" alt="Fatal Services Logo">
       <div id="loginProgress" class="login-progress" aria-hidden="true"><div class="bar"></div></div>
       <h1>Fatal Services</h1>
@@ -1006,7 +1008,11 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
       if(USERS[u] && USERS[u] === p){
         stopLoginRotator();
         var greet = document.querySelector('#welcomeScreen .welcome-greeting');
-        if(greet){ greet.textContent = 'WELCOME ' + u.toUpperCase(); }
+        if(greet){
+  greet.textContent = 'WELCOME ' + u.toUpperCase();
+  greet.style.display = 'block';
+  setTimeout(function(){ greet.style.opacity = '1'; }, 50);
+}
         var el = document.getElementById('welcomeScreen');
         var logoImg = el ? el.querySelector('.welcome-card img') : null;
         var btn = document.getElementById('loginGo');
