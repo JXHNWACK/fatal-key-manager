@@ -821,7 +821,36 @@ dialog::backdrop{
     function $(q, el){ return (el||document).querySelector(q); }
     function openDialog(id){ try{ document.getElementById(id).showModal(); }catch{ document.getElementById(id).setAttribute('open',''); } }
     function closeDialog(id){ try{ document.getElementById(id).close(); }catch{ document.getElementById(id).removeAttribute('open'); } }
-
+// --- Banner & Toast helpers ---
+function showBanner(msg){
+  var host=document.getElementById('banner'); if(!host) return;
+  host.innerHTML='<div class="msg">'+String(msg||'')+'</div>';
+  host.style.display='block';
+  clearTimeout(showBanner.__t);
+  showBanner.__t=setTimeout(function(){host.style.display='none';},4200);
+}
+function showToast(msg){
+  var host=document.getElementById('toast'); if(!host) return;
+  host.innerHTML='<div class="msg">'+String(msg||'')+'</div>';
+  host.style.display='block';
+  clearTimeout(showToast.__t);
+  showToast.__t=setTimeout(function(){host.style.display='none';},1500);
+}
+// Replace window.alert with banner (nicer errors)
+window.alert=function(m){showBanner(m);};
+// --- Per-login accent colours ---
+const USER_ACCENTS={
+  'JXHNWACK':['#69CFDA','#41A8B5'], // teal
+  'UncleJoey':['#FFD166','#E4A329'], // amber
+  'UncleG':['#EF476F','#C43C5C'],    // red
+  'UncleTrash':['#06D6A0','#0E9F79'] // green
+};
+function applyUserAccent(user){
+  var pair=USER_ACCENTS[user];
+  if(!pair) return;
+  document.documentElement.style.setProperty('--accent',pair[0]);
+  document.documentElement.style.setProperty('--accent-2',pair[1]);
+}
     /* ======== CLOUD SYNC (Sheet.best) ======== */
     // Use your Sheet.best URL:
     const SHEETBEST_URL = 'https://api.sheetbest.com/sheets/cb0efcb6-cff3-45cf-8e5c-17e914ec9aa6';
@@ -974,6 +1003,7 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
           try{
             sessionStorage.setItem('fs_authed','1');
             sessionStorage.setItem('fs_user', u);
+            applyUserAccent(u);
           }catch(e){}
           var menu=document.getElementById('userMenu');
           var btnU=document.getElementById('userBtn');
@@ -999,6 +1029,7 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
           var el=document.getElementById('welcomeScreen');
           if(el) el.style.display='none';
           var u=sessionStorage.getItem('fs_user')||'User';
+          applyUserAccent(u);
           var menu=document.getElementById('userMenu');
           var btn=document.getElementById('userBtn');
           if(menu) menu.style.display='inline-block';
@@ -1204,7 +1235,12 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
 
     // ---------- actions ----------
     function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.clipboard){ navigator.clipboard.writeText(k.code); } }
-    async function removeKey(id){
+    async function removeKey(id){function copyCode(id){
+  const k=state.keys.find(x=>x.id===id);
+  if(k && navigator.clipboard){
+    navigator.clipboard.writeText(k.code).then(function(){ showToast('Copied ✔'); });
+  }
+}
       if(!confirm('Delete this key from your list?')) return;
       const k=state.keys.find(x=>x.id===id); if(!k) return;
 
