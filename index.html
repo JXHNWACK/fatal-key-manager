@@ -164,8 +164,38 @@
 #banner.show{top:10px;opacity:1}
 #banner .msg{position:relative;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(239,71,111,.95),rgba(239,71,111,.88));color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 24px rgba(239,71,111,.35);border:1px solid rgba(255,255,255,.12);font-size:14px;letter-spacing:.2px}
 #banner .msg button.close{appearance:none;-webkit-appearance:none;position:relative;margin-left:6px;border:none;background:rgba(0,0,0,.15);color:#fff;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;padding:6px 8px}#banner .msg button.close:hover{background:rgba(0,0,0,.25)}
-#toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:10000;display:none}
-#toast .msg{background:linear-gradient(180deg,rgba(6,214,160,.95),rgba(6,214,160,.88));color:#071216;padding:8px 12px;border-radius:999px;box-shadow:0 10px 24px rgba(6,214,160,.30);border:1px solid rgba(0,0,0,.10);font-weight:700;font-size:13px}
+/* Center overlay copy toast (green accent) */
+#toast{
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 10000;
+  pointer-events: none; /* never blocks clicks */
+}
+#toast .msg{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%) scale(0.92);
+  background: linear-gradient(180deg, rgba(6,214,160,.95), rgba(6,214,160,.88));
+  color: #071216;
+  padding: 12px 16px;
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(6,214,160,.30);
+  border: 1px solid rgba(0,0,0,.10);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: .2px;
+  animation: toast-pop 1.8s ease forwards; /* set/restarted in JS */
+}
+
+/* Pop/hold/fade animation */
+@keyframes toast-pop{
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.92); }
+  10%  { opacity: 1; transform: translate(-50%,-50%) scale(1.00); }
+  80%  { opacity: 1; transform: translate(-50%,-50%) scale(1.02); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(0.98); }
+}
 
 /* Animated tab underline */
 .tabs{position:relative}
@@ -861,19 +891,29 @@ function hideBanner(immediate){
 }
 function showToast(msg){
   var host=document.getElementById('toast'); if(!host) return;
-  host.innerHTML='<div class="msg">'+String(msg||'')+'</div>';
-  host.style.display='block';
+  host.innerHTML = '<div class="msg">'+String(msg||'')+'</div>';
+  host.style.display = 'block';
+  // restart the pop animation each time
+  var m = host.querySelector('.msg');
+  if(m){
+    m.style.animation = 'none';
+    // force reflow then reapply animation
+    void m.offsetWidth;
+    m.style.animation = 'toast-pop 1.8s ease forwards';
+  }
   clearTimeout(showToast.__t);
-  showToast.__t=setTimeout(function(){host.style.display='none';},1500);
+  showToast.__t = setTimeout(function(){
+    host.style.display = 'none';
+  }, 1800);
 }
 // Replace window.alert with banner (nicer errors)
 window.alert=function(m){showBanner(m);};
 // --- Per-login accent colours ---
 const USER_ACCENTS={
-  'JXHNWACK':['#69CFDA','#41A8B5'], // teal
-  'UncleJoey':['#FFD166','#E4A329'], // amber
-  'UncleG':['#EF476F','#C43C5C'],    // red
-  'UncleTrash':['#06D6A0','#0E9F79'] // green
+  'JXHNWACK':['#69CFDA','#41A8B5'],
+  'UncleJoey':['#69CFDA','#41A8B5'],
+  'UncleG':['#69CFDA','#41A8B5'],
+  'UncleTrash':['#69CFDA','#41A8B5']
 };
 function applyUserAccent(user){
   var pair=USER_ACCENTS[user];
