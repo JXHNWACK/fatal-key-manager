@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Push to GitHub Pages",
+      "type": "shell",
+      "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main); git add . && git commit -m 'Quick update' || echo 'No changes to commit'; git push origin \"$BRANCH\"",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    }
+  ]
+}
