@@ -812,8 +812,9 @@ dialog::backdrop{
       var uEl = document.getElementById('loginUser');
       var pEl = document.getElementById('loginPass');
       if(uEl) uEl.value = name;
-      var pw = (name === 'JXHNWACK') ? '1212' : 'password';
-      if(pEl) pEl.value = pw;
+      // Do not auto-fill password anymore
+      // var pw = (name === 'JXHNWACK') ? '1212' : 'password';
+      // if(pEl) pEl.value = pw;
       if(pEl) pEl.focus();
     }
 
