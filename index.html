@@ -1404,6 +1404,37 @@ window.setSort=setSort;
       }
     });
 
+    // Enable the Continue button only when a user is chosen and a password is typed
+    function toggleLoginButton(){
+      var pick = document.getElementById('loginPick');
+      var pass = document.getElementById('loginPass');
+      var btn  = document.getElementById('loginGo');
+      if(!btn) return;
+      var hasUser = !!(pick && pick.value);
+      var hasPass = !!(pass && pass.value && pass.value.length>0);
+      btn.disabled = !(hasUser && hasPass);
+      var tick = document.getElementById('loginTick');
+      if(tick) tick.style.display = (hasUser && hasPass) ? 'inline' : 'none';
+    }
+
+    // Keep button/tick state in sync
+    document.addEventListener('DOMContentLoaded', function(){
+      var pick = document.getElementById('loginPick');
+      var pass = document.getElementById('loginPass');
+      if(pick) pick.addEventListener('change', toggleLoginButton);
+      if(pass) pass.addEventListener('input', toggleLoginButton);
+      toggleLoginButton();
+    });
+
+    // Also update when preset user is picked
+    (function(){
+      var _pickPresetUser = window.pickPresetUser;
+      window.pickPresetUser = function(name){
+        if(typeof _pickPresetUser === 'function') _pickPresetUser(name);
+        toggleLoginButton();
+      };
+    })();
+
     // init
     (function(){
       applyTheme();
@@ -1419,25 +1450,3 @@ window.setSort=setSort;
   </script>
 </body>
 </html>
-    // Enable the Continue button only when a user is chosen and a password is typed
-    function toggleLoginButton(){
-      var pick = document.getElementById('loginPick');
-      var pass = document.getElementById('loginPass');
-      var btn  = document.getElementById('loginGo');
-      if(!btn) return;
-      var hasUser = !!(pick && pick.value);
-      var hasPass = !!(pass && pass.value && pass.value.length>0);
-      btn.disabled = !(hasUser && hasPass);
-
-      // show/hide the green tick
-      var tick = document.getElementById('loginTick');
-      if(tick) tick.style.display = (hasUser && hasPass) ? 'inline' : 'none';
-    }
-    // Bind listeners once DOM is ready
-    document.addEventListener('DOMContentLoaded', function(){
-      var pick = document.getElementById('loginPick');
-      var pass = document.getElementById('loginPass');
-      if(pick) pick.addEventListener('change', toggleLoginButton);
-      if(pass) pass.addEventListener('input', toggleLoginButton);
-      toggleLoginButton();
-    });
