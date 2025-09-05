@@ -160,9 +160,10 @@
     details[open]{background:rgba(255,255,255,.05)}
     summary{cursor:pointer}
     code{background:rgba(0,0,0,.35); padding:2px 6px; border-radius:6px}
-/* ===== Banner (errors) & Toast (success/info) ===== */
-#banner{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:10000;display:none}
-#banner .msg{background:linear-gradient(180deg,rgba(239,71,111,.95),rgba(239,71,111,.88));color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 24px rgba(239,71,111,.35);border:1px solid rgba(255,255,255,.12);font-size:14px;letter-spacing:.2px}
+#banner{position:fixed;top:-80px;left:50%;transform:translateX(-50%);z-index:10000;transition:top .35s ease,opacity .35s ease;opacity:0}
+#banner.show{top:10px;opacity:1}
+#banner .msg{position:relative;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(239,71,111,.95),rgba(239,71,111,.88));color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 24px rgba(239,71,111,.35);border:1px solid rgba(255,255,255,.12);font-size:14px;letter-spacing:.2px}
+#banner .msg button.close{appearance:none;-webkit-appearance:none;position:relative;margin-left:6px;border:none;background:rgba(0,0,0,.15);color:#fff;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;padding:6px 8px}#banner .msg button.close:hover{background:rgba(0,0,0,.25)}
 #toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:10000;display:none}
 #toast .msg{background:linear-gradient(180deg,rgba(6,214,160,.95),rgba(6,214,160,.88));color:#071216;padding:8px 12px;border-radius:999px;box-shadow:0 10px 24px rgba(6,214,160,.30);border:1px solid rgba(0,0,0,.10);font-weight:700;font-size:13px}
 
@@ -449,7 +450,24 @@
   to { transform: rotate(360deg); }
 }
 
-/* --- Visual improvements --- */
+    /* --- Visual improvements --- */
+
+    /* Soft shadows + depth layers: keep backgrounds flat, add depth to interactive */
+    /* Flatten non-interactive panels */
+    .header{ box-shadow: none !important; }
+    tbody tr{ box-shadow: none !important; }
+    .toolbar .group{ box-shadow: none !important; }
+    details{ box-shadow: none !important; }
+    /* Keep modals and transient UI with depth */
+    dialog{ box-shadow: var(--shadow) !important; }
+    #banner .msg, #toast .msg{ box-shadow: 0 10px 24px rgba(0,0,0,.28) !important; }
+    /* Buttons get a light base shadow and a bit more on hover (already defined) */
+    button{ box-shadow: 0 4px 10px rgba(0,0,0,.18); }
+    .btn-primary{ box-shadow: 0 6px 16px rgba(105,207,218,.26); }
+    button:hover{ box-shadow: 0 8px 20px rgba(0,0,0,.28); }
+    .btn-primary:hover{ box-shadow: 0 12px 28px rgba(105,207,218,.32); }
+    /* Tabs stay flat; only hover styling applies */
+    .tab{ box-shadow: none !important; }
 
 /* 1) Blurred backdrop on modals */
 dialog::backdrop{
@@ -824,10 +842,20 @@ dialog::backdrop{
 // --- Banner & Toast helpers ---
 function showBanner(msg){
   var host=document.getElementById('banner'); if(!host) return;
-  host.innerHTML='<div class="msg">'+String(msg||'')+'</div>';
-  host.style.display='block';
+  host.innerHTML='<div class="msg">'+String(msg||'')+'<button class="close" aria-label="Dismiss" title="Dismiss">×</button></div>';
+  // show with slide animation
+  host.classList.add('show');
+  // set up auto hide
   clearTimeout(showBanner.__t);
-  showBanner.__t=setTimeout(function(){host.style.display='none';},4200);
+  showBanner.__t=setTimeout(function(){ hideBanner(); }, 4200);
+  // wire close button
+  var btn=host.querySelector('button.close');
+  if(btn){ btn.onclick=function(){ hideBanner(true); }; }
+}
+function hideBanner(immediate){
+  var host=document.getElementById('banner'); if(!host) return;
+  if(immediate){ clearTimeout(showBanner.__t); }
+  host.classList.remove('show');
 }
 function showToast(msg){
   var host=document.getElementById('toast'); if(!host) return;
@@ -1218,8 +1246,32 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
                  p+' <span class="chip"><span class="dot '+dot+'"></span>'+c+'</span></div>';
       }).join('');
       $('#tabs').innerHTML = tabs;
+      // add underline element
+      if(!document.getElementById('tabUnderline')){
+        const ul=document.createElement('div');
+        ul.id='tabUnderline';
+        ul.className='tab-underline';
+        document.getElementById('tabs').appendChild(ul);
+      }
+      moveTabUnderline();
     }
-    function setFilter(p){ state.filterProduct=p; render(); }
+    function setFilter(p){ state.filterProduct=p; render(); moveTabUnderline(); }
+
+    // Move tab underline to active tab
+    function moveTabUnderline(){
+      var tabsEl=document.getElementById('tabs');
+      var underline=document.getElementById('tabUnderline');
+      if(!tabsEl || !underline) return;
+      var active=tabsEl.querySelector('.tab.active');
+      if(active){
+        underline.style.width=active.offsetWidth+'px';
+        underline.style.transform='translateX('+active.offsetLeft+'px)';
+        underline.style.opacity='1';
+      }else{
+        underline.style.width='0';
+        underline.style.opacity='0';
+      }
+    }
 
     function visibleRows(){
       const inAssigned = state.filterProduct==='Assigned';
