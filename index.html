@@ -1364,11 +1364,13 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
 
       if(CLOUD_ENABLED){
         await cloudPatchById(k.id, patch);
+        showToast('Released ✔');
         await load();
         return;
       }
 
       Object.assign(k, patch);
+      showToast('Released ✔');
       save();
     }
 
@@ -1400,12 +1402,15 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
       if(CLOUD_ENABLED){
         await cloudPatchById(k.id, patch);
         closeDialog('assignModal');
+        showToast('Saved ✔');
         await load();
         return;
       }
 
       Object.assign(k, patch);
-      closeDialog('assignModal'); save();
+      closeDialog('assignModal');
+      showToast('Saved ✔');
+      save();
     }
 
     // ---------- CSV / backup / restore ----------
@@ -1580,7 +1585,7 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
     }
     function onBulkAdd(){ $('#bulkProduct').value=(state.filterProduct==='All'||state.filterProduct==='Assigned')?'Shadow':state.filterProduct; $('#bulkType').value='Day'; $('#bulkText').value=''; openDialog('bulkModal'); }
     function onNewSingle(){ $('#s_product').value=(state.filterProduct==='All'||state.filterProduct==='Assigned')?'Shadow':state.filterProduct; $('#s_type').value='Day'; $('#s_code').value=''; openDialog('singleModal'); }
-    async function saveBulkAdd(){
+async function saveBulkAdd(){
       const product=$('#bulkProduct').value;
       const type=$('#bulkType').value;
       const allExisting = new Set(state.keys.map(k=>String(k.code||'').toLowerCase()));
@@ -1607,6 +1612,7 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
         // store undo (ids we just created)
         pushUndo({ type:'add', payload:{ ids: rows.map(r=>r.id) } });
         closeDialog('bulkModal');
+        showToast('Added ✔');
         await load();
         return;
       }
@@ -1615,7 +1621,9 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
       state.keys.unshift(...newItems);
       // undo for local add
       pushUndo({ type:'add', payload:{ ids: newItems.map(r=>r.id) } });
-      closeDialog('bulkModal'); save();
+      closeDialog('bulkModal');
+      showToast('Added ✔');
+      save();
     }
     async function saveSingleAdd(){
       const code=($('#s_code').value||'').trim(); if(!code) return;
@@ -1637,6 +1645,7 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
         // undo for cloud add
         pushUndo({ type:'add', payload:{ ids:[id] } });
         closeDialog('singleModal');
+        showToast('Added ✔');
         await load();
         return;
       }
@@ -1645,7 +1654,9 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
       state.keys.unshift(item);
       // undo for local add
       pushUndo({ type:'add', payload:{ ids:[item.id] } });
-      closeDialog('singleModal'); save();
+      closeDialog('singleModal');
+      showToast('Added ✔');
+      save();
     }
 
     // expose for inline attributes
