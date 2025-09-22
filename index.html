@@ -826,6 +826,7 @@ dialog::backdrop{
           <select id="bulkProduct">
             <option value="Shadow">Shadow</option>
             <option value="Black">Black</option>
+            <option value="Nebula">Nebula</option>
           </select>
         </div>
         <div class="field">
@@ -853,7 +854,7 @@ dialog::backdrop{
       </div>
       <div class="modal-body">
         <div class="field"><label>Product</label>
-          <select id="s_product"><option>Shadow</option><option>Black</option></select></div>
+          <select id="s_product"><option>Shadow</option><option>Black</option><option>Nebula</option></select></div>
         <div class="field"><label>Type</label>
           <select id="s_type"><option>Day</option><option>Week</option><option>Month</option><option>Lifetime</option></select></div>
         <div class="field"><label>Key code</label>
@@ -1285,7 +1286,7 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
       const allCount = available.length;
       const assignedCount = state.keys.filter(k=>k.status==='assigned' || k.status==='expired').length;
 
-      const tabs = ['All','Shadow','Black','Assigned'].map(p=>{
+      const tabs = ['All','Shadow','Black','Nebula','Assigned'].map(p=>{
         let c=0, dot='ok';
         if(p==='All') c = allCount;
         else if(p==='Assigned'){ c = assignedCount; dot='warn'; }
