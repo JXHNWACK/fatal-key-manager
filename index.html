@@ -922,58 +922,75 @@ function applyUserAccent(user){
   document.documentElement.style.setProperty('--accent',pair[0]);
   document.documentElement.style.setProperty('--accent-2',pair[1]);
 }
-    /* ======== CLOUD SYNC (Sheet.best) ======== */
-    // Use your Sheet.best URL:
-    const SHEETBEST_URL = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
-    const CLOUD_ENABLED = true; // flip to false to go back to pure local
+    /* ======== CLOUD SYNC (SteinHQ) ======== */
+const STEIN_BASE   = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
+const STEIN_SHEET  = 'Keys';   // <-- exact worksheet/tab name in your sheet
+const STEIN_TOKEN  = '';       // <-- put token if your storage is private
+const CLOUD_ENABLED = true;
 
-    async function cloudGetAll(){
-      const r = await fetch(SHEETBEST_URL, { cache:'no-store' });
-      if(!r.ok) throw new Error('Cloud fetch failed');
-      setCloudStatus(true);
-      return await r.json(); // array of rows (objects)
-    }
-    async function cloudAppend(rows){ // rows: array of objects
-      const r = await fetch(SHEETBEST_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(rows)
-      });
-      if(!r.ok){
-        const msg = await r.text().catch(()=>r.statusText);
-        console.error('Cloud append failed:', msg);
-        setCloudStatus(false, msg);
-        alert('Cloud append failed: ' + msg);
-        throw new Error('Cloud append failed');
-      }
-      setCloudStatus(true);
-    }
-    async function cloudPatchById(id, patch){ // patch: object
-      const r = await fetch(`${SHEETBEST_URL}/id/${encodeURIComponent(id)}`, {
-        method:'PATCH', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(patch)
-      });
-      if(!r.ok){
-        const msg = await r.text().catch(()=>r.statusText);
-        console.error('Cloud patch failed:', msg);
-        setCloudStatus(false, msg);
-        alert('Cloud update failed: ' + msg);
-        throw new Error('Cloud patch failed');
-      }
-      setCloudStatus(true);
-    }
-    async function cloudDeleteById(id){
-      const r = await fetch(`${SHEETBEST_URL}/id/${encodeURIComponent(id)}`, {
-        method:'DELETE'
-      });
-      if(!r.ok){
-        const msg = await r.text().catch(()=>r.statusText);
-        console.error('Cloud delete failed:', msg);
-        setCloudStatus(false, msg);
-        alert('Cloud delete failed: ' + msg);
-        throw new Error('Cloud delete failed');
-      }
-      setCloudStatus(true);
-    }
+function steinHeaders(){
+  const h = { 'Accept':'application/json', 'Content-Type':'application/json' };
+  if (STEIN_TOKEN) h['X-Auth-Token'] = STEIN_TOKEN;
+  return h;
+}
+
+// READ all rows
+async function cloudGetAll(){
+  const url = `${STEIN_BASE}/list/${encodeURIComponent(STEIN_SHEET)}`;
+  const r = await fetch(url, { method:'GET', headers: steinHeaders(), cache:'no-store' });
+  if(!r.ok){
+    const msg = await r.text().catch(()=>r.statusText);
+    setCloudStatus(false, msg);
+    throw new Error(`Cloud fetch failed: ${msg}`);
+  }
+  setCloudStatus(true);
+  return await r.json();
+}
+
+// INSERT rows (array of objects)
+async function cloudAppend(rows){
+  const url = `${STEIN_BASE}/list/${encodeURIComponent(STEIN_SHEET)}`;
+  const r = await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify(rows) });
+  if(!r.ok){
+    const msg = await r.text().catch(()=>r.statusText);
+    console.error('Cloud append failed:', msg);
+    setCloudStatus(false, msg);
+    alert('Cloud append failed: ' + msg);
+    throw new Error('Cloud append failed');
+  }
+  setCloudStatus(true);
+}
+
+// UPDATE by id (search + set)
+async function cloudPatchById(id, patch){
+  const url = `${STEIN_BASE}/update/${encodeURIComponent(STEIN_SHEET)}`;
+  const body = { search: { id }, set: patch };
+  const r = await fetch(url, { method:'PUT', headers: steinHeaders(), body: JSON.stringify(body) });
+  if(!r.ok){
+    const msg = await r.text().catch(()=>r.statusText);
+    console.error('Cloud patch failed:', msg);
+    setCloudStatus(false, msg);
+    alert('Cloud update failed: ' + msg);
+    throw new Error('Cloud patch failed');
+  }
+  setCloudStatus(true);
+}
+
+// DELETE by id (search)
+async function cloudDeleteById(id){
+  const url = `${STEIN_BASE}/delete/${encodeURIComponent(STEIN_SHEET)}`;
+  const body = { search: { id } };
+  const r = await fetch(url, { method:'DELETE', headers: steinHeaders(), body: JSON.stringify(body) });
+  if(!r.ok){
+    const msg = await r.text().catch(()=>r.statusText);
+    console.error('Cloud delete failed:', msg);
+    setCloudStatus(false, msg);
+    alert('Cloud delete failed: ' + msg);
+    throw new Error('Cloud delete failed');
+  }
+  setCloudStatus(true);
+}
+
 
     // --- Cloud status UI ---
     function setCloudStatus(ok, msg){
