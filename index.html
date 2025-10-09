@@ -923,9 +923,9 @@ function applyUserAccent(user){
   document.documentElement.style.setProperty('--accent-2',pair[1]);
 }
     /* ======== CLOUD SYNC (SteinHQ) ======== */
-const STEIN_BASE   = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
-const STEIN_SHEET  = 'STEIN_SHEET';   // <-- exact worksheet/tab name in your sheet
-const STEIN_TOKEN  = '';       // <-- put token if your storage is private
+const STEIN_BASE    = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
+const STEIN_SHEET   = 'STEIN_SHEET';   // <- exact tab name from your screenshot
+const STEIN_TOKEN   = '';              // <- add if your storage is private
 const CLOUD_ENABLED = true;
 
 function steinHeaders(){
@@ -936,7 +936,7 @@ function steinHeaders(){
 
 // READ all rows
 async function cloudGetAll(){
-  const url = `${STEIN_BASE}/list/${encodeURIComponent(STEIN_SHEET)}`;
+  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
   const r = await fetch(url, { method:'GET', headers: steinHeaders(), cache:'no-store' });
   if(!r.ok){
     const msg = await r.text().catch(()=>r.statusText);
@@ -949,7 +949,7 @@ async function cloudGetAll(){
 
 // INSERT rows (array of objects)
 async function cloudAppend(rows){
-  const url = `${STEIN_BASE}/list/${encodeURIComponent(STEIN_SHEET)}`;
+  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
   const r = await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify(rows) });
   if(!r.ok){
     const msg = await r.text().catch(()=>r.statusText);
@@ -961,10 +961,10 @@ async function cloudAppend(rows){
   setCloudStatus(true);
 }
 
-// UPDATE by id (search + set)
+// UPDATE by id
 async function cloudPatchById(id, patch){
-  const url = `${STEIN_BASE}/update/${encodeURIComponent(STEIN_SHEET)}`;
-  const body = { search: { id }, set: patch };
+  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+  const body = { condition: { id }, set: patch }; // <-- condition (not search)
   const r = await fetch(url, { method:'PUT', headers: steinHeaders(), body: JSON.stringify(body) });
   if(!r.ok){
     const msg = await r.text().catch(()=>r.statusText);
@@ -976,10 +976,10 @@ async function cloudPatchById(id, patch){
   setCloudStatus(true);
 }
 
-// DELETE by id (search)
+// DELETE by id
 async function cloudDeleteById(id){
-  const url = `${STEIN_BASE}/delete/${encodeURIComponent(STEIN_SHEET)}`;
-  const body = { search: { id } };
+  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+  const body = { condition: { id } }; // <-- condition (not search)
   const r = await fetch(url, { method:'DELETE', headers: steinHeaders(), body: JSON.stringify(body) });
   if(!r.ok){
     const msg = await r.text().catch(()=>r.statusText);
