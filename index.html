@@ -20,22 +20,11 @@
       --radius: 16px;
     }
 
-    /* Global box sizing + prevent sideways scroll */
     *, *::before, *::after{ box-sizing: border-box; }
     html, body{ max-width:100%; overflow-x:hidden; }
-
-    /* Light mode palette (toggled by .light on :root) */
     :root.light{
-      --bg:#F6F7FB;
-      --panel:#FFFFFF;
-      --panel-2:#F2F4F7;
-      --text:#111319;
-      --muted:#5A6570;
-      --accent:#178C97;
-      --accent-2:#0E6F79;
-      --danger:#C43C5C;
-      --ok:#0E9F79;
-      --warn:#E4A329;
+      --bg:#F6F7FB; --panel:#FFFFFF; --panel-2:#F2F4F7; --text:#111319; --muted:#5A6570;
+      --accent:#178C97; --accent-2:#0E6F79; --danger:#C43C5C; --ok:#0E9F79; --warn:#E4A329;
       --shadow: 0 10px 30px rgba(0,0,0,.10);
     }
 
@@ -48,15 +37,11 @@
     .container{max-width:1100px; margin:24px auto; padding:0 16px}
     .header{display:flex; align-items:center; gap:16px; padding:16px; background:linear-gradient(180deg, rgba(105,207,218,.08), rgba(105,207,218,.02)); border:1px solid rgba(105,207,218,.25); border-radius:var(--radius); box-shadow:var(--shadow)}
     .logo{
-  width:78px; height:78px;
-  border-radius:50%;
-  background:#0c0c16 url('./fs_logo_emoji.png') center/cover no-repeat;
-  box-shadow:0 0 30px rgba(105,207,218,.55) inset, 0 0 22px rgba(105,207,218,.35);
-  animation: pulse-glow 2.5s infinite;  /* always pulsing */
-  position: relative; z-index: 1;
-}
-    /* Toolbar action layout: left stack (Clear/Undo), right row (Refresh/Bulk Add) */
-    /* Desktop default: keep everything inline and compact */
+      width:78px; height:78px; border-radius:50%; background:#0c0c16 url('./fs_logo_emoji.png') center/cover no-repeat;
+      box-shadow:0 0 30px rgba(105,207,218,.55) inset, 0 0 22px rgba(105,207,218,.35);
+      animation: pulse-glow 2.5s infinite; position: relative; z-index: 1;
+    }
+
     .toolbar .group.search{ align-items:center; }
     .action-grid{ display:flex; gap:8px; align-items:center; width:auto; }
     .action-grid .left-stack{ display:flex; flex-direction:row; gap:8px; }
@@ -64,7 +49,6 @@
     .action-grid .left-stack button,
     .action-grid .right-row button{ width:auto; }
 
-    /* Mobile / narrow only: 2-a-side (left stack vertical, right row horizontal) */
     @media (max-width: 680px){
       .action-grid{ width:100%; justify-content:space-between; }
       .action-grid .left-stack{ flex-direction:column; gap:8px; flex:1 1 48%; }
@@ -73,47 +57,22 @@
       .toolbar .group.search input{ margin-bottom:6px; }
     }
 
-@keyframes pulse-glow {
-  0% {
-    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
-  }
-  70% {
-    box-shadow: 0 0 40px rgba(105,207,218, 0), 0 0 22px rgba(105,207,218,.35) inset;
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
-  }
-}
+    @keyframes pulse-glow {
+      0% { box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset; }
+      70%{ box-shadow: 0 0 40px rgba(105,207,218, 0), 0 0 22px rgba(105,207,218,.35) inset; }
+      100%{ box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset; }
+    }
 
-@-webkit-keyframes pulse-glow {
-  0% {
-    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
-  }
-  70% {
-    box-shadow: 0 0 40px rgba(105,207,218, 0), 0 0 22px rgba(105,207,218,.35) inset;
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(105,207,218, 0.7), 0 0 22px rgba(105,207,218,.35) inset;
-  }
-}
     .title h1{margin:0; font-size:22px; letter-spacing:.5px}
     .title p{margin:4px 0 0; color:var(--muted); font-size:13px}
 
     .toolbar{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0}
     .toolbar .group{display:flex; gap:8px; background:var(--panel); padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,.06)}
-    /* stacked, compact button group for manage actions */
-    .toolbar .group.stack{
-      flex-direction: column;
-      align-items: stretch;
-      gap:6px;
-    }
+    .toolbar .group.stack{ flex-direction: column; align-items: stretch; gap:6px; }
     .toolbar .group.stack button,
     .toolbar .group.stack label.btn-ghost,
-    .toolbar .group.stack .btn-primary{
-      font-size:12px;
-      padding:8px 10px;
-      line-height:1.1;
-    }
+    .toolbar .group.stack .btn-primary{ font-size:12px; padding:8px 10px; line-height:1.1; }
+
     button, select, input[type="date"], input[type="text"]{
       background:var(--panel-2); color:var(--text); border:1px solid rgba(255,255,255,.1); padding:10px 12px; border-radius:10px; cursor:pointer; font-size:14px
     }
@@ -135,7 +94,6 @@
     thead th{font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.6px; text-align:left; padding:0 12px}
     tbody tr{background:var(--panel); box-shadow:var(--shadow)}
     td{padding:8px 8px; border-top:1px solid rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.06)}
-
     thead th.sortable{ cursor:pointer; user-select:none; }
     thead th.sortable:hover{ color: var(--text); filter: brightness(1.05); }
     thead th .caret{ opacity:.8; margin-left:6px; font-size:11px; }
@@ -160,58 +118,34 @@
     details[open]{background:rgba(255,255,255,.05)}
     summary{cursor:pointer}
     code{background:rgba(0,0,0,.35); padding:2px 6px; border-radius:6px}
-#banner{position:fixed;top:-80px;left:50%;transform:translateX(-50%);z-index:10000;transition:top .35s ease,opacity .35s ease;opacity:0}
-#banner.show{top:10px;opacity:1}
-#banner .msg{position:relative;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(239,71,111,.95),rgba(239,71,111,.88));color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 24px rgba(239,71,111,.35);border:1px solid rgba(255,255,255,.12);font-size:14px;letter-spacing:.2px}
-#banner .msg button.close{appearance:none;-webkit-appearance:none;position:relative;margin-left:6px;border:none;background:rgba(0,0,0,.15);color:#fff;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;padding:6px 8px}#banner .msg button.close:hover{background:rgba(0,0,0,.25)}
-/* Center overlay copy toast (green accent) */
-#toast{
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 10000;
-  pointer-events: none; /* never blocks clicks */
-}
-#toast .msg{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%) scale(0.92);
-  background: linear-gradient(180deg, rgba(6,214,160,.95), rgba(6,214,160,.88));
-  color: #071216;
-  padding: 12px 16px;
-  border-radius: 14px;
-  box-shadow: 0 14px 30px rgba(6,214,160,.30);
-  border: 1px solid rgba(0,0,0,.10);
-  font-weight: 800;
-  font-size: 14px;
-  letter-spacing: .2px;
-  animation: toast-pop 1.8s ease forwards; /* set/restarted in JS */
-}
 
-/* Pop/hold/fade animation */
-@keyframes toast-pop{
-  0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.92); }
-  10%  { opacity: 1; transform: translate(-50%,-50%) scale(1.00); }
-  80%  { opacity: 1; transform: translate(-50%,-50%) scale(1.02); }
-  100% { opacity: 0; transform: translate(-50%,-50%) scale(0.98); }
-}
+    #banner{position:fixed;top:-80px;left:50%;transform:translateX(-50%);z-index:10000;transition:top .35s ease,opacity .35s ease;opacity:0}
+    #banner.show{top:10px;opacity:1}
+    #banner .msg{position:relative;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(239,71,111,.95),rgba(239,71,111,.88));color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 24px rgba(239,71,111,.35);border:1px solid rgba(255,255,255,.12);font-size:14px;letter-spacing:.2px}
+    #banner .msg button.close{appearance:none;-webkit-appearance:none;position:relative;margin-left:6px;border:none;background:rgba(0,0,0,.15);color:#fff;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;padding:6px 8px}
+    #banner .msg button.close:hover{background:rgba(0,0,0,.25)}
 
-/* Animated tab underline */
-.tabs{position:relative}
-.tab-underline{position:absolute;bottom:-4px;height:3px;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transform:translateX(0);transition:transform .25s ease,width .25s ease,opacity .25s ease;opacity:.95;pointer-events:none;z-index:2}
+    #toast{ position: fixed; inset: 0; display: none; z-index: 10000; pointer-events: none; }
+    #toast .msg{
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.92);
+      background: linear-gradient(180deg, rgba(6,214,160,.95), rgba(6,214,160,.88));
+      color: #071216; padding: 12px 16px; border-radius: 14px; box-shadow: 0 14px 30px rgba(6,214,160,.30);
+      border: 1px solid rgba(0,0,0,.10); font-weight: 800; font-size: 14px; letter-spacing: .2px;
+      animation: toast-pop 1.8s ease forwards;
+    }
+    @keyframes toast-pop{ 0%{opacity:0;transform:translate(-50%,-50%) scale(.92);}10%{opacity:1;transform:translate(-50%,-50%) scale(1);}80%{opacity:1;transform:translate(-50%,-50%) scale(1.02);}100%{opacity:0;transform:translate(-50%,-50%) scale(.98);} }
 
-    /* Welcome/login overlay (isolated) */
+    .tabs{position:relative}
+    .tab-underline{position:absolute;bottom:-4px;height:3px;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transform:translateX(0);transition:transform .25s ease,width .25s ease,opacity .25s ease;opacity:.95;pointer-events:none;z-index:2}
+
+    /* Welcome/login overlay */
     #welcomeScreen{
       position:fixed; inset:0; background:var(--bg);
-      display:flex; align-items:center; justify-content:center;
-      z-index:9999;
+      display:flex; align-items:center; justify-content:center; z-index:9999;
     }
     .welcome-card{
-      width:min(520px, 92vw);
-      background:var(--panel);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:20px; box-shadow:var(--shadow);
+      width:min(520px, 92vw); background:var(--panel);
+      border:1px solid rgba(255,255,255,.06); border-radius:20px; box-shadow:var(--shadow);
       padding:28px; text-align:center;
     }
     .welcome-card img{ width:84px; height:84px; border-radius:12px; margin-bottom:12px; box-shadow:0 0 22px rgba(105,207,218,.35); }
@@ -225,85 +159,29 @@
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
 
-    /* Big greeting above logo */
     .welcome-greeting{
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 4px;
-  color: var(--text);
-  opacity: 0; /* start hidden */
-  margin: 0 0 10px 0;
-  text-transform: uppercase;
-  text-align: center;
-  text-shadow: 0 0 16px rgba(105,207,218,.25);
-  animation: greet-glow 2.8s ease-in-out infinite;
-  transition: opacity .8s ease; /* fade in after login */
-}
+      font-size: 28px; font-weight: 800; letter-spacing: 4px; color: var(--text);
+      opacity: 0; margin: 0 0 10px 0; text-transform: uppercase; text-align: center;
+      text-shadow: 0 0 16px rgba(105,207,218,.25); animation: greet-glow 2.8s ease-in-out infinite;
+      transition: opacity .8s ease;
     }
-    @keyframes greet-glow{
-      0%,100%{ text-shadow: 0 0 12px rgba(105,207,218,.20); opacity:.95; }
-      50%    { text-shadow: 0 0 20px rgba(105,207,218,.45); opacity:1; }
-    }
+    @keyframes greet-glow{ 0%,100%{ text-shadow: 0 0 12px rgba(105,207,218,.20); opacity:.95; } 50%{ text-shadow: 0 0 20px rgba(105,207,218,.45); opacity:1; } }
 
-    /* Rotating helper messages under Continue */
-    .welcome-rotate{
-      min-height: 18px; /* reserve line so layout doesn't shift */
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-      animation: rot-fade 600ms ease;
-    }
-    @keyframes rot-fade{ from{ opacity:0; transform: translateY(4px);} to{ opacity:1; transform:none; } }
-
-    @media (prefers-reduced-motion: reduce){
-      .welcome-greeting{ animation: none; }
-      .welcome-rotate{ animation: none; }
-    }
-
-
-    /* --- Login success glow on the welcome logo (longer + brighter) --- */
-    .welcome-card img.login-pulse{
-      animation: login-glow 3.6s ease-in-out 1;
-    }
+    .welcome-card img.login-pulse{ animation: login-glow 3.6s ease-in-out 1; }
     @keyframes login-glow{
-      0%   { filter:none; box-shadow:0 0 26px rgba(105,207,218,.45); }
-      25%  { filter:brightness(1.10) saturate(1.08); box-shadow:0 0 56px rgba(105,207,218,.85); }
-      50%  { filter:brightness(1.18) saturate(1.12); box-shadow:0 0 72px rgba(105,207,218,.95); }
-      75%  { filter:brightness(1.10) saturate(1.08); box-shadow:0 0 56px rgba(105,207,218,.85); }
-      100% { filter:none; box-shadow:0 0 26px rgba(105,207,218,.45); }
+      0%{ filter:none; box-shadow:0 0 26px rgba(105,207,218,.45); }
+      25%{ filter:brightness(1.10) saturate(1.08); box-shadow:0 0 56px rgba(105,207,218,.85); }
+      50%{ filter:brightness(1.18) saturate(1.12); box-shadow:0 0 72px rgba(105,207,218,.95); }
+      75%{ filter:brightness(1.10) saturate(1.08); box-shadow:0 0 56px rgba(105,207,218,.85); }
+      100%{ filter:none; box-shadow:0 0 26px rgba(105,207,218,.45); }
     }
-    /* --- Slim loading bar under the logo (shown during login) --- */
-    .welcome-card .login-progress{
-      display:none; height:6px; margin:6px 0 2px; border-radius:999px; overflow:hidden;
-      background: var(--panel-2);
-      border:1px solid rgba(255,255,255,.08);
-    }
-    .welcome-card .login-progress .bar{
-      height:100%; width:0;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      animation: progress-run 3.6s ease-in-out forwards;
-    }
+    .welcome-card .login-progress{ display:none; height:6px; margin:6px 0 2px; border-radius:999px; overflow:hidden; background: var(--panel-2); border:1px solid rgba(255,255,255,.08); }
+    .welcome-card .login-progress .bar{ height:100%; width:0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); animation: progress-run 3.6s ease-in-out forwards; }
     @keyframes progress-run{ from{ width:0% } to{ width:100% } }
-    /* Respect reduced-motion */
-    @media (prefers-reduced-motion: reduce){
-      .welcome-card img.login-pulse{ animation:none; }
-    }
 
-    /* --- Wrong password shake --- */
     .welcome-card.shake{ animation: shake .4s ease; }
-    @keyframes shake{
-      0%,100%{ transform:translateX(0); }
-      20%{ transform:translateX(-6px); }
-      40%{ transform:translateX(6px); }
-      60%{ transform:translateX(-4px); }
-      80%{ transform:translateX(4px); }
-    }
-    @media (prefers-reduced-motion: reduce){
-      .welcome-card.shake{ animation:none; }
-    }
+    @keyframes shake{ 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-6px); } 40%{ transform:translateX(6px); } 60%{ transform:translateX(-4px); } 80%{ transform:translateX(4px); } }
 
-    /* User menu (header) */
     .user-menu{position:relative; display:none; margin-left:12px;}
     .user-menu .dropdown{
       display:none; position:absolute; right:0; top:110%;
@@ -311,231 +189,66 @@
       border-radius:10px; box-shadow:var(--shadow); min-width:140px; z-index:10000;
     }
     .user-menu .dropdown button{
-      width:100%; text-align:left; background:transparent;
-      border:none; color:var(--text); padding:10px; cursor:pointer;
+      width:100%; text-align:left; background:transparent; border:none; color:var(--text); padding:10px; cursor:pointer;
     }
     .user-menu .dropdown button:hover{background:rgba(255,255,255,.08);}
-    /* Compact toolbar dropdown */
+
     .toolbar .menu-wrap{ position:relative; }
     .toolbar .dropdown{
       display:none; position:absolute; right:0; top:110%;
       background:var(--panel); border:1px solid rgba(255,255,255,.1);
       border-radius:10px; box-shadow:var(--shadow); min-width:200px; z-index:10000; padding:6px;
     }
-    .toolbar .dropdown .item{
-      display:block; width:100%; text-align:left; background:transparent;
-      border:none; color:var(--text); padding:10px; cursor:pointer; border-radius:8px;
-    }
+    .toolbar .dropdown .item{ display:block; width:100%; text-align:left; background:transparent; border:none; color:var(--text); padding:10px; cursor:pointer; border-radius:8px; }
     .toolbar .dropdown .item:hover{ background:rgba(255,255,255,.08); }
     .toolbar .dropdown .divider{ height:1px; background:rgba(255,255,255,.08); margin:6px 0; }
     .toolbar label.item{ display:flex; align-items:center; gap:8px; cursor:pointer; }
     .toolbar label.item input{ display:none; }
-    /* === new visual enhancements === */
-    /* animated glow behind the header */
+
     .header{ position:relative; overflow:hidden; }
     .header::before{
-      content:"";
-      position:absolute; inset:-30%;
+      content:""; position:absolute; inset:-30%;
       background:
         radial-gradient(600px 320px at 12% 40%, rgba(105,207,218,.22), transparent 60%),
         radial-gradient(420px 260px at 88% -10%, rgba(105,207,218,.12), transparent 65%);
-      filter: blur(18px);
-      animation: header-pulse 6s ease-in-out infinite;
-      z-index:0;
+      filter: blur(18px); animation: header-pulse 6s ease-in-out infinite; z-index:0;
     }
     .header > *{ position:relative; z-index:1; }
+    @keyframes header-pulse{ 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.9; transform:scale(1.03); } }
 
-    @keyframes header-pulse{
-      0%,100%{ opacity:.55; transform:scale(1); }
-      50%     { opacity:.9;  transform:scale(1.03); }
-    }
+    button, .tab{ transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease; }
+    button:hover{ transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,.28); }
+    .btn-primary:hover{ transform: translateY(-1px); box-shadow: 0 10px 26px rgba(105,207,218,.30); filter: brightness(1.02); }
+    .tab:hover{ transform: translateY(-1px); border-color: rgba(105,207,218,.6); background: linear-gradient(180deg, rgba(105,207,218,.18), rgba(105,207,218,.06)); }
 
-    /* smooth lift/glow on hover */
-    button, .tab{
-      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
-    }
-    button:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(0,0,0,.28);
-    }
-    .btn-primary:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 10px 26px rgba(105,207,218,.30);
-      filter: brightness(1.02);
-    }
-    .tab:hover{
-      transform: translateY(-1px);
-      border-color: rgba(105,207,218,.6);
-      background: linear-gradient(180deg, rgba(105,207,218,.18), rgba(105,207,218,.06));
-    }
+    tbody tr{ transition: background .15s ease, transform .15s ease; }
+    tbody tr:hover{ background: rgba(105,207,218,.06); transform: translateY(-1px); }
 
-    /* subtle row highlight */
-    tbody tr{
-      transition: background .15s ease, transform .15s ease;
-    }
-    tbody tr:hover{
-      background: rgba(105,207,218,.06);
-      transform: translateY(-1px);
-    }
-    /* -- Pulse for Assigned chip (red) -- */
-    @keyframes pulse-danger {
-      0%   { box-shadow: 0 0 0 0 rgba(239,71,111,.8); transform: translateZ(0); }
-      50%  { box-shadow: 0 0 24px 6px rgba(239,71,111,.45); }
-      100% { box-shadow: 0 0 0 0 rgba(239,71,111,.8); }
-    }
-    /* animate the red status dot */
-    .chip .dot.danger{
-      animation: pulse-danger 1.5s ease-in-out infinite;
-    }
+    @keyframes pulse-danger { 0%{ box-shadow: 0 0 0 0 rgba(239,71,111,.8);} 50%{ box-shadow: 0 0 24px 6px rgba(239,71,111,.45);} 100%{ box-shadow: 0 0 0 0 rgba(239,71,111,.8);} }
+    .chip .dot.danger{ animation: pulse-danger 1.5s ease-in-out infinite; }
 
-    /* -- Pulse for Assigned chip (amber) -- */
-    @keyframes pulse-warn {
-      0%   { box-shadow: 0 0 0 0 rgba(255,209,102,.75); }
-      50%  { box-shadow: 0 0 22px 6px rgba(255,209,102,.40); }
-      100% { box-shadow: 0 0 0 0 rgba(255,209,102,.75); }
-    }
-    .chip .dot.warn{
-      animation: pulse-warn 1.6s ease-in-out infinite;
-    }
-    /* Smaller monospace in the Key column */
-    .key-cell{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-weight: 600;
-      font-size: 14px;        /* bigger font */
-      line-height: 1.05;      /* tight line height to keep rows compact */
-      white-space: nowrap;    /* prevent wrapping which would increase row height */
-    }
+    @keyframes pulse-warn { 0%{ box-shadow: 0 0 0 0 rgba(255,209,102,.75);} 50%{ box-shadow: 0 0 22px 6px rgba(255,209,102,.40);} 100%{ box-shadow: 0 0 0 0 rgba(255,209,102,.75);} }
+    .chip .dot.warn{ animation: pulse-warn 1.6s ease-in-out infinite; }
 
-    /* Badges for key type */
-    .badge{
-      display:inline-block;
-      padding:2px 8px;
-      font-size:13px;
-      font-weight:600;
-      border-radius:8px;
-      text-transform:capitalize;
-    }
+    .key-cell{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; font-size: 14px; line-height: 1.05; white-space: nowrap; }
+
+    .badge{ display:inline-block; padding:2px 8px; font-size:13px; font-weight:600; border-radius:8px; text-transform:capitalize; }
     .badge.Day{ background:rgba(105,207,218,.18); color:var(--accent); }
     .badge.Week{ background:rgba(255,209,102,.18); color:var(--warn); }
     .badge.Month{ background:rgba(239,71,111,.18); color:var(--danger); }
     .badge.Lifetime{ background:rgba(14,159,121,.18); color:var(--ok); }
 
-    /* optional: if browser supports :has(), gently glow the whole chip when assigned */
-    @keyframes pulse-chip {
-      0%,100% { filter: brightness(1); }
-      50%     { filter: brightness(1.08); }
-    }
-    .chip:has(.dot.danger){
-      animation: none;
-      box-shadow: none;
-    }
+    @keyframes pulse-ok { 0%{ box-shadow: 0 0 0 0 rgba(6,214,160,.70);} 50%{ box-shadow: 0 0 20px 6px rgba(6,214,160,.35);} 100%{ box-shadow: 0 0 0 0 rgba(6,214,160,.70);} }
+    .chip .dot.ok{ animation: pulse-ok 2s ease-in-out infinite; }
 
-    /* -- Pulse for Available chip (green) -- */
-    @keyframes pulse-ok {
-      0%   { box-shadow: 0 0 0 0 rgba(6,214,160,.70); }
-      50%  { box-shadow: 0 0 20px 6px rgba(6,214,160,.35); }
-      100% { box-shadow: 0 0 0 0 rgba(6,214,160,.70); }
-    }
-    .chip .dot.ok{
-      animation: pulse-ok 2s ease-in-out infinite;
-    }
+    dialog::backdrop{ background: rgba(0,0,0,.6); backdrop-filter: blur(6px); }
+    .toolbar{ position: sticky; top: 12px; z-index: 50; backdrop-filter: blur(6px); background: rgba(26,25,48,.75); border: 1px solid rgba(255,255,255,.06); }
+    :focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+    #bulkText{ min-height: 100px; }
+    #bulkModal textarea#bulkText{ width: 100%; box-sizing: border-box; }
 
-    /* optional gentle glow of whole chip when available */
-    @keyframes pulse-chip-ok {
-      0%,100% { filter: brightness(1); }
-      50%     { filter: brightness(1.08); }
-    }
-    .chip:has(.dot.ok){
-      animation: none;
-      box-shadow: none;
-    }
-
-/* Multi‑color glow for FS logo: cycles hues without changing layout */
-.logo::after{
-  content:"";
-  position:absolute; inset:-16px;
-  border-radius:50%;
-  /* Soft halo that we will hue-rotate */
-  background: radial-gradient(closest-side, rgba(105,207,218,0.40), rgba(105,207,218,0) 72%);
-  filter: blur(18px) hue-rotate(0deg);
-  opacity: .60;
-  /* gentle colour cycle + gentle breathing */
-  animation: hue-spin 16s linear infinite, pulse-ring 3.2s ease-in-out infinite;
-  z-index:-1;
-  pointer-events:none;
-  will-change: filter, opacity, transform;
-}
-
-/* smoothly rotate through the color wheel */
-@keyframes hue-spin{
-  0%   { filter: blur(14px) hue-rotate(0deg); }
-  100% { filter: blur(14px) hue-rotate(360deg); }
-}
-
-/* keep a gentle scale pulse in sync with your existing glow */
-@keyframes pulse-ring{
-  0%,100% { transform: scale(1);    opacity:.85; }
-  50%     { transform: scale(1.02); opacity:.95; }
-}
-
-@keyframes spin{
-  to { transform: rotate(360deg); }
-}
-
-    /* --- Visual improvements --- */
-
-    /* Soft shadows + depth layers: keep backgrounds flat, add depth to interactive */
-    /* Flatten non-interactive panels */
-    .header{ box-shadow: none !important; }
-    tbody tr{ box-shadow: none !important; }
-    .toolbar .group{ box-shadow: none !important; }
-    details{ box-shadow: none !important; }
-    /* Keep modals and transient UI with depth */
-    dialog{ box-shadow: var(--shadow) !important; }
-    #banner .msg, #toast .msg{ box-shadow: 0 10px 24px rgba(0,0,0,.28) !important; }
-    /* Buttons get a light base shadow and a bit more on hover (already defined) */
-    button{ box-shadow: 0 4px 10px rgba(0,0,0,.18); }
-    .btn-primary{ box-shadow: 0 6px 16px rgba(105,207,218,.26); }
-    button:hover{ box-shadow: 0 8px 20px rgba(0,0,0,.28); }
-    .btn-primary:hover{ box-shadow: 0 12px 28px rgba(105,207,218,.32); }
-    /* Tabs stay flat; only hover styling applies */
-    .tab{ box-shadow: none !important; }
-
-/* 1) Blurred backdrop on modals */
-dialog::backdrop{
-  background: rgba(0,0,0,.6);
-  backdrop-filter: blur(6px);
-}
-
-/* 2) Sticky toolbar with glass look */
-.toolbar{
-  position: sticky; top: 12px; z-index: 50;
-  backdrop-filter: blur(6px);
-  background: rgba(26,25,48,.75);
-  border: 1px solid rgba(255,255,255,.06);
-}
-
-/* 5) Clean focus rings */
-:focus-visible{
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-    /* Smaller Bulk Add textarea only (was 120px via generic textarea rule) */
-    #bulkText{
-      min-height: 100px;
-    }
-
-    /* Make Bulk Add textarea match the full input width */
-    #bulkModal textarea#bulkText{
-      width: 100%;
-      box-sizing: border-box;
-    }
-    /* ================= Mobile stacked-card layout + fixes (phones) ================= */
     @media (max-width: 540px){
-      /* prevent sideways scroll */
       html, body{ max-width:100%; overflow-x:hidden; }
-
-      /* Font and spacing tweaks for mobile */
       body{ font-size:14px; }
       .title h1{ font-size:16px; }
       .title p{ font-size:11px; }
@@ -553,95 +266,32 @@ dialog::backdrop{
       .welcome-form input, .welcome-form select{ font-size:14px; padding:8px 10px; }
       .welcome-actions button{ font-size:14px; padding:8px 12px; }
 
-      /* container & header alignment */
       .container{ max-width:100%; padding:0 10px; }
-      /* Header (mobile): logo LEFT, title+subtitle as vertical block to right, chips wrap below */
-      .header{
-        flex-direction: row;
-        align-items: center;
-        flex-wrap: nowrap;            /* do NOT wrap logo/title, only chips below */
-        gap: 6px;
-        width: 100%;
-        box-sizing: border-box;
-      }
-      .title{
-        order: 2;
-        flex: 1 1 auto;
-        max-width: 100%;
-        min-width: 0;
-        display: block;
-        margin: 0;
-      }
-      .title h1{
-        margin: 0 0 4px 0;
-        font-size: 14px;
-        letter-spacing: .4px;
-        line-height: 1.1;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: initial;
-      }
-      .title p{
-        margin: 0;
-        font-size: 10px;
-        color: var(--muted);
-        line-height: 1.15;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: initial;
-      }
-      .logo{
-        order: 1;
-        flex: 0 0 56px;
-        width: 56px;
-        height: 56px;
-        aspect-ratio: 1/1;
-        border-radius: 50%;
-        margin-right: 8px;
-        margin-left: 0;
-      }
-      .right{
-        order: 3;                     /* chips row */
-        width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
+      .header{ flex-direction: row; align-items: center; flex-wrap: nowrap; gap: 6px; width: 100%; box-sizing: border-box; }
+      .title{ order: 2; flex: 1 1 auto; max-width: 100%; min-width: 0; display: block; margin: 0; }
+      .title h1{ margin: 0 0 4px 0; font-size: 14px; letter-spacing: .4px; line-height: 1.1; white-space: normal; overflow: visible; text-overflow: initial; }
+      .title p{ margin: 0; font-size: 10px; color: var(--muted); line-height: 1.15; white-space: normal; overflow: visible; text-overflow: initial; }
+      .logo{ order: 1; flex: 0 0 56px; width: 56px; height: 56px; aspect-ratio: 1/1; border-radius: 50%; margin-right: 8px; margin-left: 0; }
+      .right{ order: 3; width: 100%; display: flex; flex-wrap: wrap; gap: 6px; }
 
-      /* toolbar stacks cleanly */
-      .toolbar{ top:8px; width:100%; box-sizing:border-box; }
+      .toolbar{ position: static; top: auto; backdrop-filter: none; background: transparent; border: none; }
       .toolbar .group{ width:100%; }
       .toolbar .group.search{ flex-direction:column; gap:6px; }
       .toolbar .group.search input{ width:100%; }
       .toolbar .group.search button{ width:100%; }
 
-      /* tabs tighter */
-      .tab{ padding:8px 12px; }
-
-      /* ---- turn table into stacked cards ---- */
       thead{ display:none; }
       table{ border-spacing:0; }
       table, tbody, tr, td{ display:block; width:100%; }
       tbody tr{
-        background:var(--panel);
-        border:1px solid rgba(255,255,255,.06);
-        border-radius:14px;
-        padding:10px 12px;
-        margin:10px 0;
-        box-shadow: var(--shadow);
+        background:var(--panel); border:1px solid rgba(255,255,255,.06);
+        border-radius:14px; padding:10px 12px; margin:10px 0; box-shadow: var(--shadow);
       }
-      /* key becomes title */
+      tbody td{ border:0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; gap:10px; word-break:break-word; }
       tbody td:first-child{
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-weight:700; font-size:14px; line-height:1.1;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight:700; font-size:14px;
         padding:4px 0 6px 0; border:0; white-space:normal;
       }
-      tbody td{
-        border:0; padding:6px 0;
-        display:flex; justify-content:space-between; align-items:center; gap:10px;
-        word-break:break-word;
-      }
-      /* field labels via pseudo-elements (no HTML changes needed) */
       tbody td:nth-child(2)::before{ content:"Product"; color:var(--muted); font-size:12px; }
       tbody td:nth-child(3)::before{ content:"Type";    color:var(--muted); font-size:12px; }
       tbody td:nth-child(4)::before{ content:"Status";  color:var(--muted); font-size:12px; }
@@ -649,55 +299,26 @@ dialog::backdrop{
       tbody td:nth-child(6)::before{ content:"Reason";  color:var(--muted); font-size:12px; }
       tbody td:nth-child(7)::before{ content:"Date";    color:var(--muted); font-size:12px; }
 
-      /* actions row on bottom */
       tbody td:last-child{ padding-top:10px; gap:8px; flex-wrap:wrap; }
       .actions{ gap:8px; }
       .actions button{ flex:1 1 48%; padding:8px 10px; font-size:13px; }
       .actions .btn-primary{ flex:1 1 100%; }
 
-      /* modals fit small screens */
       dialog{ width:94vw; }
       #bulkModal textarea#bulkText{ min-height:90px; }
 
-      /* prevent iOS zoom on focus */
-      input, select, textarea, button{ font-size:16px; }
-
-      /* Mobile: make Logout clearly visible and stop sticky toolbar */
-      /* Always show the logout action on mobile */
       .user-menu{ display:block !important; }
-      .user-menu #userBtn{ display:none; } /* hide the toggle button */
-      .user-menu .dropdown{
-        display:block !important;
-        position: static;           /* place in flow with chips */
-        background: transparent;
-        border: none;
-        box-shadow: none;
-        padding: 0;
-        margin: 0;
-      }
-      .user-menu .dropdown button{
-        background: var(--panel-2);
-        border: 1px solid rgba(255,255,255,.12);
-        border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 12px;
-      }
-
-      /* Disable sticky toolbar on mobile so it doesn't follow while scrolling */
-      .toolbar{
-        position: static;
-        top: auto;
-        backdrop-filter: none;
-        background: transparent;
-        border: none;
-      }
+      .user-menu #userBtn{ display:none; }
+      .user-menu .dropdown{ display:block !important; position: static; background: transparent; border: none; box-shadow: none; padding: 0; margin: 0; }
+      .user-menu .dropdown button{ background: var(--panel-2); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 6px 10px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
-<!-- Global banner & toast (non-blocking UI) -->
-<div id="banner" aria-live="polite"></div>
-<div id="toast" aria-live="polite"></div>
+  <!-- Global banner & toast -->
+  <div id="banner" aria-live="polite"></div>
+  <div id="toast" aria-live="polite"></div>
+
   <!-- Welcome/login overlay -->
   <div id="welcomeScreen" aria-modal="true" role="dialog">
     <div class="welcome-card">
@@ -707,7 +328,6 @@ dialog::backdrop{
       <h1>Fatal Services</h1>
       <p>Key Manager — Login</p>
       <form class="welcome-form" onsubmit="return attemptLogin(event)">
-        <!-- NEW: quick-pick user dropdown -->
         <select id="loginPick" onchange="pickPresetUser(this.value)">
           <option value="">Choose a user…</option>
           <option value="UncleJoey">UncleJoey</option>
@@ -715,7 +335,6 @@ dialog::backdrop{
           <option value="UncleTrash">UncleTrash</option>
           <option value="JXHNWACK">JXHNWACK</option>
         </select>
-
         <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
         <div class="welcome-actions">
           <button id="loginGo" type="submit" class="btn-primary" disabled>Continue</button>
@@ -734,13 +353,9 @@ dialog::backdrop{
         <p>A tool for staff to track and distribute keys provided by Fatal Services.</p>
       </div>
       <div class="right">
-        <!-- CHANGED: Offline uses red dot, now dynamic -->
         <span id="netChip" class="chip"><span class="dot danger"></span><span id="netText">Offline</span></span>
-        <span id="cloudChip" class="chip" title="Cloud status">
-  <span class="dot danger"></span><span id="cloudLabel">Cloud</span>
-</span>
+        <span id="cloudChip" class="chip" title="Cloud status"><span class="dot danger"></span><span id="cloudLabel">Cloud</span></span>
 
-        <!-- User menu (appears after login) -->
         <div class="user-menu" id="userMenu">
           <button onclick="toggleUserDropdown()" class="btn-ghost" id="userBtn">User ▾</button>
           <div id="userDropdown" class="dropdown">
@@ -871,231 +486,208 @@ dialog::backdrop{
   </dialog>
 
   <script>
-    // ---------- helpers/state ----------
+    /* ---------- tiny helpers ---------- */
     function $(q, el){ return (el||document).querySelector(q); }
     function openDialog(id){ try{ document.getElementById(id).showModal(); }catch{ document.getElementById(id).setAttribute('open',''); } }
     function closeDialog(id){ try{ document.getElementById(id).close(); }catch{ document.getElementById(id).removeAttribute('open'); } }
-// --- Banner & Toast helpers ---
-function showBanner(msg){
-  var host=document.getElementById('banner'); if(!host) return;
-  host.innerHTML='<div class="msg">'+String(msg||'')+'<button class="close" aria-label="Dismiss" title="Dismiss">×</button></div>';
-  // show with slide animation
-  host.classList.add('show');
-  // set up auto hide
-  clearTimeout(showBanner.__t);
-  showBanner.__t=setTimeout(function(){ hideBanner(); }, 4200);
-  // wire close button
-  var btn=host.querySelector('button.close');
-  if(btn){ btn.onclick=function(){ hideBanner(true); }; }
-}
-function hideBanner(immediate){
-  var host=document.getElementById('banner'); if(!host) return;
-  if(immediate){ clearTimeout(showBanner.__t); }
-  host.classList.remove('show');
-}
-function showToast(msg){
-  var host=document.getElementById('toast'); if(!host) return;
-  host.innerHTML = '<div class="msg">'+String(msg||'')+'</div>';
-  host.style.display = 'block';
-  // restart the pop animation each time
-  var m = host.querySelector('.msg');
-  if(m){
-    m.style.animation = 'none';
-    // force reflow then reapply animation
-    void m.offsetWidth;
-    m.style.animation = 'toast-pop 1.8s ease forwards';
-  }
-  clearTimeout(showToast.__t);
-  showToast.__t = setTimeout(function(){
-    host.style.display = 'none';
-  }, 1800);
-}
-// Replace window.alert with banner (nicer errors)
-window.alert=function(m){showBanner(m);};
-// --- Per-login accent colours ---
-const USER_ACCENTS={
-  'JXHNWACK':['#69CFDA','#41A8B5'],
-  'UncleJoey':['#69CFDA','#41A8B5'],
-  'UncleG':['#69CFDA','#41A8B5'],
-  'UncleTrash':['#69CFDA','#41A8B5']
-};
-function applyUserAccent(user){
-  var pair=USER_ACCENTS[user];
-  if(!pair) return;
-  document.documentElement.style.setProperty('--accent',pair[0]);
-  document.documentElement.style.setProperty('--accent-2',pair[1]);
-}
-    /* ======== CLOUD SYNC (SteinHQ) ======== */
-const STEIN_BASE    = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
-const STEIN_SHEET   = 'STEIN_SHEET';   // <- exact tab name from your screenshot
-const STEIN_TOKEN   = '';              // <- add if your storage is private
-const CLOUD_ENABLED = true;
 
-function steinHeaders(){
-  const h = { 'Accept':'application/json', 'Content-Type':'application/json' };
-  if (STEIN_TOKEN) h['X-Auth-Token'] = STEIN_TOKEN;
-  return h;
-}
-
-// READ all rows
-async function cloudGetAll(){
-  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-  const r = await fetch(url, { method:'GET', headers: steinHeaders(), cache:'no-store' });
-  if(!r.ok){
-    const msg = await r.text().catch(()=>r.statusText);
-    setCloudStatus(false, msg);
-    throw new Error(`Cloud fetch failed: ${msg}`);
-  }
-  setCloudStatus(true);
-  return await r.json();
-}
-
-// INSERT rows (array of objects)
-async function cloudAppend(rows){
-  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-  const r = await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify(rows) });
-  if(!r.ok){
-    const msg = await r.text().catch(()=>r.statusText);
-    console.error('Cloud append failed:', msg);
-    setCloudStatus(false, msg);
-    alert('Cloud append failed: ' + msg);
-    throw new Error('Cloud append failed');
-  }
-  setCloudStatus(true);
-}
-
-// UPDATE by id
-async function cloudPatchById(id, patch){
-  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-  const body = { condition: { id }, set: patch }; // <-- condition (not search)
-  const r = await fetch(url, { method:'PUT', headers: steinHeaders(), body: JSON.stringify(body) });
-  if(!r.ok){
-    const msg = await r.text().catch(()=>r.statusText);
-    console.error('Cloud patch failed:', msg);
-    setCloudStatus(false, msg);
-    alert('Cloud update failed: ' + msg);
-    throw new Error('Cloud patch failed');
-  }
-  setCloudStatus(true);
-}
-
-// DELETE by id
-async function cloudDeleteById(id){
-  const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-  const body = { condition: { id } }; // <-- condition (not search)
-  const r = await fetch(url, { method:'DELETE', headers: steinHeaders(), body: JSON.stringify(body) });
-  if(!r.ok){
-    const msg = await r.text().catch(()=>r.statusText);
-    console.error('Cloud delete failed:', msg);
-    setCloudStatus(false, msg);
-    alert('Cloud delete failed: ' + msg);
-    throw new Error('Cloud delete failed');
-  }
-  setCloudStatus(true);
-}
-
-
-    // --- Cloud status UI ---
-    let LAST_SYNC_AT = null;
-let SYNC_TOASTED = false;
-
-function setCloudStatus(ok, msg){
-  var chip = document.getElementById('cloudChip');
-  if(!chip) return;
-
-  var dot   = chip.querySelector('.dot');
-  var label = document.getElementById('cloudLabel');
-
-  if(dot){
-    dot.classList.remove('ok','danger');
-    dot.classList.add(ok ? 'ok' : 'danger');
-  }
-
-  if(ok){
-    LAST_SYNC_AT = new Date();
-    if(label){
-      label.textContent = 'Cloud • ' + LAST_SYNC_AT.toLocaleTimeString();
+    /* ---------- Banner & Toast ---------- */
+    function showBanner(msg){
+      var host=document.getElementById('banner'); if(!host) return;
+      host.innerHTML='<div class="msg">'+String(msg||'')+'<button class="close" aria-label="Dismiss" title="Dismiss">×</button></div>';
+      host.classList.add('show');
+      clearTimeout(showBanner.__t);
+      showBanner.__t=setTimeout(function(){ hideBanner(); }, 4200);
+      var btn=host.querySelector('button.close'); if(btn){ btn.onclick=function(){ hideBanner(true); }; }
     }
-    chip.title = 'Cloud: OK — Last sync at ' + LAST_SYNC_AT.toLocaleString();
-
-    if(!SYNC_TOASTED){
-      showToast('Sync successful ✔');
-      SYNC_TOASTED = true;
+    function hideBanner(immediate){
+      var host=document.getElementById('banner'); if(!host) return;
+      if(immediate){ clearTimeout(showBanner.__t); }
+      host.classList.remove('show');
     }
-    setNetStatus(true);
-  }else{
-    if(label) label.textContent = 'Cloud Error';
-    chip.title = 'Cloud: Error — ' + (msg || 'Unknown');
-    SYNC_TOASTED = false;
-  }
-}
+    function showToast(msg){
+      var host=document.getElementById('toast'); if(!host) return;
+      host.innerHTML = '<div class="msg">'+String(msg||'')+'</div>';
+      host.style.display = 'block';
+      var m = host.querySelector('.msg');
+      if(m){ m.style.animation = 'none'; void m.offsetWidth; m.style.animation = 'toast-pop 1.8s ease forwards'; }
+      clearTimeout(showToast.__t); showToast.__t = setTimeout(function(){ host.style.display = 'none'; }, 1800);
+    }
+    window.alert=function(m){showBanner(m);};
 
+    /* ---------- Per-user accents ---------- */
+    const USER_ACCENTS={ 'JXHNWACK':['#69CFDA','#41A8B5'], 'UncleJoey':['#69CFDA','#41A8B5'], 'UncleG':['#69CFDA','#41A8B5'], 'UncleTrash':['#69CFDA','#41A8B5'] };
+    function applyUserAccent(user){
+      var pair=USER_ACCENTS[user];
+      if(!pair) return;
+      document.documentElement.style.setProperty('--accent',pair[0]);
+      document.documentElement.style.setProperty('--accent-2',pair[1]);
+    }
 
-    // --- Network status (Online/Offline) chip ---
-    function setNetStatus(on){
-      var chip = document.getElementById('netChip');
-      if(!chip) return;
-      var dot = chip.querySelector('.dot');
-      if(dot){
-        dot.classList.remove('ok','danger');
-        dot.classList.add(on ? 'ok' : 'danger');
+    /* ======== SteinHQ v2 Cloud (resilient) ======== */
+    const STEIN_BASE    = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
+    const STEIN_SHEET   = 'Keys';         // <— your tab name
+    const STEIN_TOKEN   = '';             // add X-Auth-Token if private
+    const CLOUD_ENABLED = true;
+
+    function steinHeaders(){
+      const h = { 'Accept':'application/json', 'Content-Type':'application/json' };
+      if (STEIN_TOKEN) h['X-Auth-Token'] = STEIN_TOKEN;
+      return h;
+    }
+
+    async function backoff(fn, tries=3){
+      let attempt=0, lastErr;
+      while(attempt<tries){
+        try{ return await fn(); }
+        catch(e){ lastErr=e; await new Promise(r=>setTimeout(r, 400*Math.pow(2,attempt))); attempt++; }
       }
-      var t = document.getElementById('netText');
-      if(t) t.textContent = on ? 'Online' : 'Offline';
+      throw lastErr;
+    }
+
+    async function ensureSheet(){
+      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+      try{ await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify([]) }); }catch(e){}
+    }
+
+    function coerceRow(r){
+      return {
+        id:         r.id         || (Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(2)),
+        code:       r.code       || '',
+        product:    r.product    || '',
+        type:       r.type       || 'Day',
+        status:     r.status     || 'available',
+        assignedTo: r.assignedTo || '',
+        reason:     r.reason     || '',
+        date:       r.date       || '',
+        assignedBy: r.assignedBy || ''
+      };
+    }
+
+    async function cloudGetAll(){
+      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+      const exec = async () => {
+        const r = await fetch(url, { method:'GET', headers: steinHeaders(), cache:'no-store' });
+        if(!r.ok){
+          const msg = await r.text().catch(()=>r.statusText);
+          if (r.status === 404){ await ensureSheet(); throw new Error('Sheet missing (bootstrap attempted). Reload and try again.'); }
+          throw new Error(`Cloud fetch failed: ${msg}`);
+        }
+        return await r.json();
+      };
+      const rows = await backoff(exec);
+      setCloudStatus(true);
+      return rows;
+    }
+
+    async function cloudAppend(rows){
+      if(!rows || !rows.length) return;
+      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+      const exec = async () => {
+        const r = await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify(rows) });
+        if(!r.ok){
+          const msg = await r.text().catch(()=>r.statusText);
+          if (r.status === 404){ await ensureSheet(); throw new Error('Sheet missing (bootstrap attempted). Try again.'); }
+          throw new Error(`Cloud append failed: ${msg}`);
+        }
+      };
+      await backoff(exec);
+      setCloudStatus(true);
+    }
+
+    async function cloudPatchById(id, patch){
+      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+      const body = { condition:{ id }, set: patch };
+      const exec = async () => {
+        const r = await fetch(url, { method:'PUT', headers: steinHeaders(), body: JSON.stringify(body) });
+        if(!r.ok){ const msg = await r.text().catch(()=>r.statusText); throw new Error(`Cloud patch failed: ${msg}`); }
+      };
+      await backoff(exec);
+      setCloudStatus(true);
+    }
+
+    async function cloudDeleteById(id){
+      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+      const body = { condition:{ id } };
+      const exec = async () => {
+        const r = await fetch(url, { method:'DELETE', headers: steinHeaders(), body: JSON.stringify(body) });
+        if(!r.ok){ const msg = await r.text().catch(()=>r.statusText); throw new Error(`Cloud delete failed: ${msg}`); }
+      };
+      await backoff(exec);
+      setCloudStatus(true);
+    }
+
+    /* ---------- Cloud/Net status UI ---------- */
+    let LAST_SYNC_AT = null;
+    let SYNC_TOASTED = false;
+
+    function setCloudStatus(ok, msg){
+      var chip = document.getElementById('cloudChip'); if(!chip) return;
+      var dot   = chip.querySelector('.dot');
+      var label = document.getElementById('cloudLabel');
+
+      if(dot){ dot.classList.remove('ok','danger'); dot.classList.add(ok ? 'ok' : 'danger'); }
+
+      if(ok){
+        LAST_SYNC_AT = new Date();
+        if(label){ label.textContent = 'Cloud • ' + LAST_SYNC_AT.toLocaleTimeString(); }
+        chip.title = 'Cloud: OK — Last sync at ' + LAST_SYNC_AT.toLocaleString();
+        if(!SYNC_TOASTED){ showToast('Sync successful ✔'); SYNC_TOASTED = true; }
+        setNetStatus(true);
+      }else{
+        if(label) label.textContent = 'Cloud Error';
+        chip.title = 'Cloud: Error — ' + (msg || 'Unknown');
+        SYNC_TOASTED = false;
+      }
+    }
+
+    function setNetStatus(on){
+      var chip = document.getElementById('netChip'); if(!chip) return;
+      var dot = chip.querySelector('.dot');
+      if(dot){ dot.classList.remove('ok','danger'); dot.classList.add(on ? 'ok' : 'danger'); }
+      var t = document.getElementById('netText'); if(t) t.textContent = on ? 'Online' : 'Offline';
     }
     window.addEventListener('online',  function(){ setNetStatus(true);  });
     window.addEventListener('offline', function(){ setNetStatus(false); });
 
-    // --- Welcome/login + user menu ---
-    const USERS = {
-      'JXHNWACK': '1212',
-      'UncleJoey': 'password',
-      'UncleG': 'password',
-      'UncleTrash': 'password'
-    };
+    /* ---------- Login (robust) ---------- */
+    const USERS = { 'JXHNWACK':'1212', 'UncleJoey':'password', 'UncleG':'password', 'UncleTrash':'password' };
 
-function pickPresetUser(name){
-  if(!name) return;
-  // Only focus the password; do not auto-fill any password.
-  var pEl = document.getElementById('loginPass');
-  if(pEl) pEl.focus();
-}
+    function pickPresetUser(name){
+      if(!name) return;
+      var pEl = document.getElementById('loginPass'); if(pEl) pEl.focus();
+      toggleLoginButton();
+    }
 
-// Rotating login helper messages
-var __rotTimer = null;
-var __rotMsgs = [
-  'Welcome to Fatal Services',
-  'Securely manage your keys',
-  'Staff access only'
-];
-var __rotIdx = 0;
-function startLoginRotator(){
-  var el = document.getElementById('loginRotator');
-  if(!el) return;
-  el.textContent = __rotMsgs[__rotIdx % __rotMsgs.length];
-  clearInterval(__rotTimer);
-  __rotTimer = setInterval(function(){
-    __rotIdx++; el.textContent = __rotMsgs[__rotIdx % __rotMsgs.length];
-    // retrigger fade animation
-    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
-  }, 3000);
-}
-function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTimer = null; } }
+    var __rotTimer = null;
+    var __rotMsgs = [ 'Welcome to Fatal Services','Securely manage your keys','Staff access only' ];
+    var __rotIdx = 0;
+    function startLoginRotator(){
+      var el = document.getElementById('loginRotator'); if(!el) return;
+      el.textContent = __rotMsgs[__rotIdx % __rotMsgs.length];
+      clearInterval(__rotTimer);
+      __rotTimer = setInterval(function(){
+        __rotIdx++; el.textContent = __rotMsgs[__rotIdx % __rotMsgs.length];
+        el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+      }, 3000);
+    }
+    function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTimer = null; } }
 
     function attemptLogin(ev){
       if(ev) ev.preventDefault();
-      var u = (document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim() : '') 
-              || (document.getElementById('loginPick') ? document.getElementById('loginPick').value : '')
-              || '';
-      var p = (document.getElementById('loginPass') ? document.getElementById('loginPass').value : '');
-      if(USERS[u] && USERS[u] === p){
+      const uPick = (document.getElementById('loginPick')?.value || '').trim();
+      const p = (document.getElementById('loginPass')?.value || '');
+
+      // dev bypass: ?dev=1&as=JXHNWACK
+      const qs = new URLSearchParams(location.search);
+      const dev = qs.get('dev') === '1';
+      const as  = (qs.get('as') || '').trim();
+      const u = (dev && as) ? as : uPick;
+
+      if ((USERS[u] && USERS[u] === p) || (dev && as)){
         stopLoginRotator();
         var greet = document.querySelector('#welcomeScreen .welcome-greeting');
-        if(greet){
-  greet.textContent = 'WELCOME ' + u.toUpperCase();
-  greet.style.display = 'block';
-  setTimeout(function(){ greet.style.opacity = '1'; }, 50);
-}
+        if(greet){ greet.textContent = 'WELCOME ' + u.toUpperCase(); greet.style.display = 'block'; setTimeout(function(){ greet.style.opacity = '1'; }, 50); }
         var el = document.getElementById('welcomeScreen');
         var logoImg = el ? el.querySelector('.welcome-card img') : null;
         var btn = document.getElementById('loginGo');
@@ -1105,57 +697,50 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
         if(barWrap){
           barWrap.style.display = 'block';
           var bar = barWrap.querySelector('.bar');
-          if(bar){
-            // restart animation in case of repeated attempts
-            bar.style.animation = 'none'; bar.offsetHeight; // reflow
-            bar.style.animation = 'progress-run 3.6s ease-in-out forwards';
-          }
+          if(bar){ bar.style.animation = 'none'; bar.offsetHeight; bar.style.animation = 'progress-run 3.6s ease-in-out forwards'; }
         }
-
-        // after 3.6s, finish login and hide overlay
         setTimeout(function(){
           if(el) el.style.display = 'none';
-          // reset scroll to top-left on mobile after login
-          window.scrollTo(0,0);
-          document.documentElement.scrollLeft = 0;
-          document.body.scrollLeft = 0;
-          try{
-            sessionStorage.setItem('fs_authed','1');
-            sessionStorage.setItem('fs_user', u);
-            applyUserAccent(u);
-          }catch(e){}
-          var menu=document.getElementById('userMenu');
-          var btnU=document.getElementById('userBtn');
+          window.scrollTo(0,0); document.documentElement.scrollLeft = 0; document.body.scrollLeft = 0;
+          try{ sessionStorage.setItem('fs_authed','1'); sessionStorage.setItem('fs_user', u || 'User'); }catch(e){}
+          var menu=document.getElementById('userMenu'); var btnU=document.getElementById('userBtn');
           if(menu) menu.style.display='inline-block';
-          if(btnU) btnU.textContent = u + ' ▾';
+          if(btnU) btnU.textContent = (u || 'User') + ' ▾';
+          applyUserAccent(u || 'User');
         }, 3600);
         return false;
       }else{
-        var err = document.getElementById('welcomeError');
-        if(err) err.style.display = 'block';
+        var err = document.getElementById('welcomeError'); if(err) err.style.display = 'block';
         var card = document.querySelector('#welcomeScreen .welcome-card');
-        if(card){
-          card.classList.remove('shake'); // restart animation if repeated
-          void card.offsetWidth;          // reflow
-          card.classList.add('shake');
-        }
+        if(card){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
         return false;
       }
     }
-    (function(){
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('loginPick')?.addEventListener('change', toggleLoginButton);
+      document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
+      toggleLoginButton();
+
       try{
         if(sessionStorage.getItem('fs_authed') === '1'){
-          var el=document.getElementById('welcomeScreen');
-          if(el) el.style.display='none';
-          var u=sessionStorage.getItem('fs_user')||'User';
-          applyUserAccent(u);
-          var menu=document.getElementById('userMenu');
-          var btn=document.getElementById('userBtn');
-          if(menu) menu.style.display='inline-block';
-          if(btn) btn.textContent = u + ' ▾';
+          var el=document.getElementById('welcomeScreen'); if(el) el.style.display='none';
+          var u=sessionStorage.getItem('fs_user')||'User'; applyUserAccent(u);
+          var menu=document.getElementById('userMenu'); var btn=document.getElementById('userBtn');
+          if(menu) menu.style.display='inline-block'; if(btn) btn.textContent = u + ' ▾';
         }
       }catch(e){}
-    })();
+    });
+
+    function toggleLoginButton(){
+      var pick = document.getElementById('loginPick');
+      var pass = document.getElementById('loginPass');
+      var btn  = document.getElementById('loginGo');
+      if(!btn) return;
+      var hasUser = !!(pick && pick.value);
+      var hasPass = !!(pass && pass.value && pass.value.length>0);
+      btn.disabled = !(hasUser && hasPass);
+    }
 
     function toggleUserDropdown(){
       var dd=document.getElementById('userDropdown');
@@ -1165,148 +750,62 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
       try{ sessionStorage.removeItem('fs_authed'); sessionStorage.removeItem('fs_user'); }catch(e){}
       location.reload();
     }
-    function toggleManageMenu(){
-      var m = document.getElementById('manageMenu');
-      if(!m) return;
-      var isOpen = m.style.display === 'block';
-      m.style.display = isOpen ? 'none' : 'block';
-    }
-    // close manage menu when clicking outside
-    document.addEventListener('click', function(e){
-      var wrap = document.querySelector('.menu-wrap');
-      var menu = document.getElementById('manageMenu');
-      if(!wrap || !menu) return;
-      if(!wrap.contains(e.target)){
-        if(menu.style.display==='block') menu.style.display='none';
-      }
-    });
 
+    /* ---------- local state ---------- */
     const STORAGE_KEY='fs-key-manager-v1';
-    const state={ keys:[], filterProduct:'All', search:'' };
-    // sorting & preferences
-    state.sortKey = state.sortKey || '';
-    state.sortDir = state.sortDir || 'asc'; // 'asc' | 'desc'
-    /* --- Theme (fixed to dark) --- */
-    function applyTheme(){
-      // Force dark theme: ensure :root has no .light class
-      document.documentElement.classList.remove('light');
-    }
-    function sortRows(rows){
-      const key = state.sortKey;
-      if(!key) return rows;
-      const dir = state.sortDir === 'desc' ? -1 : 1;
+    const state={ keys:[], filterProduct:'All', search:'', sortKey:'', sortDir:'asc' };
 
+    function applyTheme(){ document.documentElement.classList.remove('light'); }
+
+    function sortRows(rows){
+      const key = state.sortKey; if(!key) return rows;
+      const dir = state.sortDir === 'desc' ? -1 : 1;
       function val(k){
-        if(key==='date'){
-          return (k.date ? new Date(k.date).getTime() : 0);
-        }
-        if(key==='assignedTo'){
-          return (k.assignedTo || '').toLowerCase();
-        }
-        if(key==='product'){
-          return (k.product || '').toLowerCase();
-        }
+        if(key==='date'){ return (k.date ? new Date(k.date).getTime() : 0); }
+        if(key==='assignedTo'){ return (k.assignedTo || '').toLowerCase(); }
+        if(key==='product'){ return (k.product || '').toLowerCase(); }
         return (k[key] || '').toString().toLowerCase();
       }
-      return rows.slice().sort((a,b)=>{
-        const va = val(a), vb = val(b);
-        if(va<vb) return -1*dir;
-        if(va>vb) return  1*dir;
-        return 0;
-      });
+      return rows.slice().sort((a,b)=>{ const va = val(a), vb = val(b); if(va<vb) return -1*dir; if(va>vb) return 1*dir; return 0; });
     }
+    function sortCaret(k){ if(state.sortKey!==k) return '<span class="caret">↕︎</span>'; return '<span class="caret">'+(state.sortDir==='asc'?'▲':'▼')+'</span>'; }
+    function setSort(k){ if(state.sortKey===k){ state.sortDir = (state.sortDir==='asc' ? 'desc' : 'asc'); }else{ state.sortKey = k; state.sortDir = 'asc'; } render(); }
 
-    function sortCaret(k){
-      if(state.sortKey!==k) return '<span class="caret">↕︎</span>';
-      return '<span class="caret">'+(state.sortDir==='asc'?'▲':'▼')+'</span>';
-    }
-    function setSort(k){
-      if(state.sortKey===k){
-        state.sortDir = (state.sortDir==='asc' ? 'desc' : 'asc');
-      }else{
-        state.sortKey = k;
-        state.sortDir = 'asc';
-      }
-      render();
-    }
-
-    // ---- Undo stack ----
+    /* ---------- Undo stack ---------- */
     const UNDO_STACK = [];
-    function updateUndoUI(){
-      var b=document.getElementById('undoBtn');
-      if(!b) return;
-      b.disabled = UNDO_STACK.length===0;
-    }
-    function pushUndo(entry){
-      UNDO_STACK.push(entry);
-      updateUndoUI();
-    }
+    function updateUndoUI(){ var b=document.getElementById('undoBtn'); if(b) b.disabled = UNDO_STACK.length===0; }
+    function pushUndo(entry){ UNDO_STACK.push(entry); updateUndoUI(); }
     async function onUndo(){
-      const last = UNDO_STACK.pop();
-      updateUndoUI();
-      if(!last) return;
-      // Each undo entry has {type, payload}
+      const last = UNDO_STACK.pop(); updateUndoUI(); if(!last) return;
       try{
-        if(last.type==='add'){ // remove the items that were just added
+        if(last.type==='add'){
           const ids = last.payload.ids || [];
-          if(CLOUD_ENABLED){
-            for(const id of ids){ await cloudDeleteById(id); }
-            await load();
-          }else{
-            state.keys = state.keys.filter(k=>!ids.includes(k.id));
-            await save();
-          }
-        }else if(last.type==='delete'){ // re-add deleted items
+          if(CLOUD_ENABLED){ for(const id of ids){ await cloudDeleteById(id); } await load(); }
+          else { state.keys = state.keys.filter(k=>!ids.includes(k.id)); await save(); }
+        }else if(last.type==='delete'){
           const items = last.payload.items || [];
+          if(CLOUD_ENABLED){ await cloudAppend(items); await load(); }
+          else { state.keys.unshift(...items); await save(); }
+        }else if(last.type==='assign' || last.type==='release'){
+          const prev = last.payload.prev; if(!prev) return;
           if(CLOUD_ENABLED){
-            await cloudAppend(items);
+            await cloudPatchById(prev.id, { code: prev.code, product: prev.product, type: prev.type, status: prev.status, assignedTo: prev.assignedTo, reason: prev.reason, date: prev.date, assignedBy: prev.assignedBy || '' });
             await load();
           }else{
-            state.keys.unshift(...items);
-            await save();
-          }
-        }else if(last.type==='assign' || last.type==='release'){ // restore previous snapshot
-          const prev = last.payload.prev;
-          if(!prev) return;
-          if(CLOUD_ENABLED){
-            await cloudPatchById(prev.id, {
-              code: prev.code, product: prev.product, type: prev.type,
-              status: prev.status, assignedTo: prev.assignedTo,
-              reason: prev.reason, date: prev.date, assignedBy: prev.assignedBy || ''
-            });
-            await load();
-          }else{
-            const idx = state.keys.findIndex(x=>x.id===prev.id);
-            if(idx>-1){ state.keys[idx]=Object.assign({}, prev); }
-            await save();
+            const idx = state.keys.findIndex(x=>x.id===prev.id); if(idx>-1){ state.keys[idx]=Object.assign({}, prev); } await save();
           }
         }
-      }catch(e){
-        console.error('Undo failed', e);
-        alert('Undo failed: '+ (e && e.message ? e.message : e));
-      }
+      }catch(e){ console.error('Undo failed', e); alert('Undo failed: '+ (e && e.message ? e.message : e)); }
     }
 
     function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(2); }
-    async function save(renderAfter=true){
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
-      if(renderAfter) render();
-    }
+    async function save(renderAfter=true){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} if(renderAfter) render(); }
+
     async function load(){
       if(CLOUD_ENABLED){
         try{
           const rows = await cloudGetAll();
-          state.keys = rows.map(r => ({
-            id: r.id || uid(),
-            code: r.code || '',
-            product: r.product || '',
-            type: r.type || 'Day',
-            status: r.status || 'available',
-            assignedTo: r.assignedTo || '',
-            reason: r.reason || '',
-            date: r.date || '',
-            assignedBy: r.assignedBy || ''
-          }));
+          state.keys = rows.map(coerceRow);
           setCloudStatus(true);
           return render();
         }catch(err){
@@ -1321,7 +820,7 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
       render();
     }
 
-    // ---------- tabs & filtering ----------
+    /* ---------- Tabs & filtering ---------- */
     function renderTabs(){
       const available = state.keys.filter(k=>k.status==='available');
       const byProd = available.reduce((a,k)=>{ a[k.product]=(a[k.product]||0)+1; return a; },{});
@@ -1337,31 +836,21 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
                  p+' <span class="chip"><span class="dot '+dot+'"></span>'+c+'</span></div>';
       }).join('');
       $('#tabs').innerHTML = tabs;
-      // add underline element
+
       if(!document.getElementById('tabUnderline')){
         const ul=document.createElement('div');
-        ul.id='tabUnderline';
-        ul.className='tab-underline';
+        ul.id='tabUnderline'; ul.className='tab-underline';
         document.getElementById('tabs').appendChild(ul);
       }
       moveTabUnderline();
     }
     function setFilter(p){ state.filterProduct=p; render(); moveTabUnderline(); }
-
-    // Move tab underline to active tab
     function moveTabUnderline(){
-      var tabsEl=document.getElementById('tabs');
-      var underline=document.getElementById('tabUnderline');
+      var tabsEl=document.getElementById('tabs'); var underline=document.getElementById('tabUnderline');
       if(!tabsEl || !underline) return;
       var active=tabsEl.querySelector('.tab.active');
-      if(active){
-        underline.style.width=active.offsetWidth+'px';
-        underline.style.transform='translateX('+active.offsetLeft+'px)';
-        underline.style.opacity='1';
-      }else{
-        underline.style.width='0';
-        underline.style.opacity='0';
-      }
+      if(active){ underline.style.width=active.offsetWidth+'px'; underline.style.transform='translateX('+active.offsetLeft+'px)'; underline.style.opacity='1'; }
+      else{ underline.style.width='0'; underline.style.opacity='0'; }
     }
 
     function visibleRows(){
@@ -1376,45 +865,26 @@ function stopLoginRotator(){ if(__rotTimer){ clearInterval(__rotTimer); __rotTim
       });
     }
 
-    // ---------- actions ----------
-function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.clipboard){ navigator.clipboard.writeText(k.code).then(function(){ showToast('Copied ✔'); }); } }
-    async function removeKey(id){function copyCode(id){
-  const k=state.keys.find(x=>x.id===id);
-  if(k && navigator.clipboard){
-    navigator.clipboard.writeText(k.code).then(function(){ showToast('Copied ✔'); });
-  }
-}
+    /* ---------- Actions ---------- */
+    function copyCode(id){
+      const k=state.keys.find(x=>x.id===id);
+      if(k && navigator.clipboard){ navigator.clipboard.writeText(k.code).then(function(){ showToast('Copied ✔'); }); }
+    }
+
+    async function removeKey(id){
       if(!confirm('Delete this key from your list?')) return;
       const k=state.keys.find(x=>x.id===id); if(!k) return;
-
-      // push undo snapshot
       pushUndo({ type:'delete', payload:{ items:[ Object.assign({}, k) ] } });
-
-      if(CLOUD_ENABLED){
-        await cloudDeleteById(k.id);
-        await load();
-        return;
-      }
-
-      state.keys=state.keys.filter(k=>k.id!==id); save();
+      if(CLOUD_ENABLED){ await cloudDeleteById(k.id); await load(); return; }
+      state.keys=state.keys.filter(x=>x.id!==id); save();
     }
+
     async function releaseKey(id){
       const k=state.keys.find(x=>x.id===id); if(!k) return;
-      // capture previous state for undo
-      const prev = Object.assign({}, k);
-      pushUndo({ type:'release', payload:{ prev } });
+      const prev = Object.assign({}, k); pushUndo({ type:'release', payload:{ prev } });
       const patch = { status:'available', assignedTo:'', reason:'', date:'', assignedBy:'' };
-
-      if(CLOUD_ENABLED){
-        await cloudPatchById(k.id, patch);
-        showToast('Released ✔');
-        await load();
-        return;
-      }
-
-      Object.assign(k, patch);
-      showToast('Released ✔');
-      save();
+      if(CLOUD_ENABLED){ await cloudPatchById(k.id, patch); showToast('Released ✔'); await load(); return; }
+      Object.assign(k, patch); showToast('Released ✔'); save();
     }
 
     let assignId=null;
@@ -1428,47 +898,24 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
     }
     async function saveAssign(){
       const k=state.keys.find(x=>x.id===assignId); if(!k) return;
-      // capture previous state for undo
-      const prev = Object.assign({}, k);
-      pushUndo({ type:'assign', payload:{ prev } });
+      const prev = Object.assign({}, k); pushUndo({ type:'assign', payload:{ prev } });
       const patch = {
         assignedTo: $('#m_user').value.trim(),
         reason: $('#m_reason').value.trim(),
         date: $('#m_date').value,
-        status: 'assigned'
+        status: 'assigned',
+        assignedBy: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown'
       };
-      try{
-        const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
-        patch.assignedBy = currentUser;
-      }catch(e){}
-
-      if(CLOUD_ENABLED){
-        await cloudPatchById(k.id, patch);
-        closeDialog('assignModal');
-        showToast('Saved ✔');
-        await load();
-        return;
-      }
-
-      Object.assign(k, patch);
-      closeDialog('assignModal');
-      showToast('Saved ✔');
-      save();
+      if(CLOUD_ENABLED){ await cloudPatchById(k.id, patch); closeDialog('assignModal'); showToast('Saved ✔'); await load(); return; }
+      Object.assign(k, patch); closeDialog('assignModal'); showToast('Saved ✔'); save();
     }
 
-    // ---------- CSV / backup / restore ----------
-    function csvEscape(v){
-      v=String(v);
-      if(v.includes('"')) v=v.replace(/"/g,'""');
-      if(v.includes(',')||v.includes('\n')||v.includes('"')) v='"'+v+'"';
-      return v;
-    }
+    /* ---------- CSV / backup / restore ---------- */
+    function csvEscape(v){ v=String(v); if(v.includes('"')) v=v.replace(/"/g,'""'); if(v.includes(',')||v.includes('\n')||v.includes('"')) v='"'+v+'"'; return v; }
     function toCSV(rows){
       const headers=['code','product','type','status','assignedTo','reason','date','assignedBy'];
       const out=[headers.join(',')];
-      for(const k of rows){
-        out.push(headers.map(h=>csvEscape(k[h]||'')).join(','));
-      }
+      for(const k of rows){ out.push(headers.map(h=>csvEscape(k[h]||'')).join(',')); }
       return out.join('\n');
     }
     function onExportCSV(){
@@ -1486,10 +933,7 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
         try{
           const incoming=JSON.parse(r.result);
           if(Array.isArray(incoming.keys)){
-            state.keys=incoming.keys;
-            state.filterProduct=incoming.filterProduct||'All';
-            state.search='';
-            save();
+            state.keys=incoming.keys; state.filterProduct=incoming.filterProduct||'All'; state.search=''; save();
           }else{ alert('Invalid backup file.'); }
         }catch(e){ alert('Could not read JSON backup.'); }
       };
@@ -1502,69 +946,45 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
       r.onload = async () => {
         try{
           const raw = JSON.parse(r.result);
-          // Accept either {keys:[...]} shape or a raw array
-          const rowsIn = Array.isArray(raw) ? raw
-                       : (raw && Array.isArray(raw.keys) ? raw.keys : null);
+          const rowsIn = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.keys) ? raw.keys : null);
           if(!rowsIn){ alert('Invalid JSON format. Expecting an array of rows or an object with a "keys" array.'); return; }
 
-          // Build current code set to skip duplicates (case-insensitive)
-          await load(); // ensure we have latest before importing
+          await load();
           const existing = new Set((state.keys||[]).map(k => String(k.code||'').toLowerCase()));
-
           const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
-          const toPost = [];
-          const skipped = [];
+          const toPost = []; const skipped = [];
 
           for(const r of rowsIn){
-            const code = String(r.code||'').trim();
-            if(!code){ continue; }
+            const code = String(r.code||'').trim(); if(!code) continue;
             const key = code.toLowerCase();
             if(existing.has(key)){ skipped.push(code); continue; }
 
             const row = {
-              id: r.id || uid(),
-              code: code,
-              product: r.product || 'Shadow',
-              type: r.type || 'Day',
-              status: r.status || 'available',
-              assignedTo: r.assignedTo || '',
-              reason: r.reason || '',
-              date: r.date || '',
-              assignedBy: r.assignedBy || currentUser
+              id: r.id || uid(), code, product: r.product || 'Shadow', type: r.type || 'Day',
+              status: r.status || 'available', assignedTo: r.assignedTo || '', reason: r.reason || '',
+              date: r.date || '', assignedBy: r.assignedBy || currentUser
             };
-            toPost.push(row);
-            existing.add(key);
+            toPost.push(row); existing.add(key);
           }
 
-          if(toPost.length===0){
-            alert(skipped.length ? 'All rows were duplicates—nothing imported.' : 'Nothing to import.');
-            return;
-          }
+          if(toPost.length===0){ alert(skipped.length ? 'All rows were duplicates—nothing imported.' : 'Nothing to import.'); return; }
 
-          if(CLOUD_ENABLED){
-            await cloudAppend(toPost);
-            await load();
-          }else{
-            state.keys.unshift(...toPost);
-            await save();
-          }
+          if(CLOUD_ENABLED){ await cloudAppend(toPost); await load(); }
+          else { state.keys.unshift(...toPost); await save(); }
 
           let msg = 'Imported '+toPost.length+' row(s).';
           if(skipped.length){ msg += '\nSkipped duplicates: '+skipped.length; }
           alert(msg);
-        }catch(e){
-          console.error('Import failed', e);
-          alert('Import failed: '+(e && e.message ? e.message : e));
-        }
+        }catch(e){ console.error('Import failed', e); alert('Import failed: '+(e && e.message ? e.message : e)); }
       };
       r.readAsText(file);
     }
 
-    // ---------- render ----------
+    /* ---------- Render ---------- */
     function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+
     function renderTable(){
-      const rows=visibleRows();
-      const sorted = sortRows(rows);
+      const rows=visibleRows(); const sorted = sortRows(rows);
       if(!rows.length){ $('#tableWrap').innerHTML='<div class="empty">No keys yet. Use <strong>Bulk Add</strong> to paste your list, or <strong>New Single</strong> to add one.</div>'; return; }
       const head = '<thead><tr>'
         + '<th>Key</th>'
@@ -1583,7 +1003,7 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
           : '<span class="chip"><span class="dot ok"></span>Available</span>';
         return '<tr>'
           + '<td class="key-cell" onclick="copyCode(\''+k.id+'\')" title="Click to copy">'+escapeHtml(k.code)+'</td>'
-          + '<td>'+k.product+'</td>'
+          + '<td>'+escapeHtml(k.product)+'</td>'
           + '<td><span class="badge '+escapeHtml(k.type)+'">'+escapeHtml(k.type)+'</span></td>'
           + '<td>'+chip+'</td>'
           + '<td>'+escapeHtml(k.assignedTo||'')+'</td>'
@@ -1599,164 +1019,98 @@ function copyCode(id){ const k=state.keys.find(x=>x.id===id); if(k && navigator.
       }).join('');
       $('#tableWrap').innerHTML='<table>'+head+'<tbody>'+body+'</tbody></table>';
     }
+
     function render(){
-      renderTabs();
-      renderTable();
-      var inp = document.getElementById('search');
-      if(inp && inp.value !== state.search){ inp.value = state.search; }
+      renderTabs(); renderTable();
+      var inp = document.getElementById('search'); if(inp && inp.value !== state.search){ inp.value = state.search; }
     }
 
-    // ---------- toolbar handlers ----------
-    function onSearchInput(val){
-      state.search = (val || '');
-      render();
-    }
+    /* ---------- Toolbar handlers ---------- */
+    function onSearchInput(val){ state.search = (val || ''); render(); }
+    function onClearSearch(){ state.search=''; const i=document.getElementById('search'); if(i) i.value=''; render(); }
+
     async function onRefreshCloud(){
-  if (typeof CLOUD_ENABLED !== 'undefined' && CLOUD_ENABLED){
-    try{
-      SYNC_TOASTED = false; // force a “Sync successful ✔” toast after manual refresh
-      await load();         // re-fetch from cloud and re-render
-      // setCloudStatus(true) is called during load() -> cloudGetAll()
-    }catch(e){
-      alert('Refresh failed: ' + (e && e.message ? e.message : e));
+      if (CLOUD_ENABLED){
+        try{ SYNC_TOASTED = false; await load(); }
+        catch(e){ alert('Refresh failed: ' + (e && e.message ? e.message : e)); }
+      }else{ alert('Cloud sync is disabled. Set CLOUD_ENABLED = true to use Refresh.'); }
     }
-  }else{
-    alert('Cloud sync is disabled. Set CLOUD_ENABLED = true to use Refresh.');
-  }
-}
-
-    function onClearLocalCache(){
-      try{
-        localStorage.removeItem(STORAGE_KEY);
-        alert('Local cache cleared. The page will reload.');
-      }catch(e){}
-      location.reload();
-    }
+    function onClearLocalCache(){ try{ localStorage.removeItem(STORAGE_KEY); alert('Local cache cleared. The page will reload.'); }catch(e){} location.reload(); }
     function onBulkAdd(){ $('#bulkProduct').value=(state.filterProduct==='All'||state.filterProduct==='Assigned')?'Shadow':state.filterProduct; $('#bulkType').value='Day'; $('#bulkText').value=''; openDialog('bulkModal'); }
     function onNewSingle(){ $('#s_product').value=(state.filterProduct==='All'||state.filterProduct==='Assigned')?'Shadow':state.filterProduct; $('#s_type').value='Day'; $('#s_code').value=''; openDialog('singleModal'); }
-async function saveBulkAdd(){
+
+    async function saveBulkAdd(){
       const product=$('#bulkProduct').value;
       const type=$('#bulkType').value;
       const allExisting = new Set(state.keys.map(k=>String(k.code||'').toLowerCase()));
       const inputCodes = ($('#bulkText').value||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
 
-      const newCodes = [];
-      const skipped = [];
+      const newCodes = []; const skipped = [];
       for(const c of inputCodes){
         const key = c.toLowerCase();
         if(allExisting.has(key)){ skipped.push(c); } else { newCodes.push(c); allExisting.add(key); }
       }
-      if(skipped.length){
-        alert('Skipped duplicates:\n' + skipped.join('\n'));
-      }
+      if(skipped.length){ alert('Skipped duplicates:\n' + skipped.join('\n')); }
       if(newCodes.length===0){ closeDialog('bulkModal'); return; }
 
       if(CLOUD_ENABLED){
         const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
-        const rows = newCodes.map(code => {
-          const id = uid();
-          return { id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser };
-        });
+        const rows = newCodes.map(code => ({ id: uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser }));
         await cloudAppend(rows);
-        // store undo (ids we just created)
         pushUndo({ type:'add', payload:{ ids: rows.map(r=>r.id) } });
-        closeDialog('bulkModal');
-        showToast('Added ✔');
-        await load();
-        return;
+        closeDialog('bulkModal'); showToast('Added ✔'); await load(); return;
       }
 
       const newItems=newCodes.map(code=>({id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''}));
       state.keys.unshift(...newItems);
-      // undo for local add
       pushUndo({ type:'add', payload:{ ids: newItems.map(r=>r.id) } });
-      closeDialog('bulkModal');
-      showToast('Added ✔');
-      save();
+      closeDialog('bulkModal'); showToast('Added ✔'); save();
     }
+
     async function saveSingleAdd(){
       const code=($('#s_code').value||'').trim(); if(!code) return;
-      const product=$('#s_product').value;
-      const type=$('#s_type').value;
-
-      // duplicate guard
+      const product=$('#s_product').value; const type=$('#s_type').value;
       const exists = state.keys.some(k => String(k.code||'').toLowerCase() === code.toLowerCase());
       if(exists){ alert('That code already exists and was not added.'); return; }
 
       if(CLOUD_ENABLED){
         const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
         const id = uid();
-        await cloudAppend([{
-          id, code, product, type,
-          status:'available',
-          assignedTo:'', reason:'', date:'', assignedBy: nowUser
-        }]);
-        // undo for cloud add
+        await cloudAppend([{ id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser }]);
         pushUndo({ type:'add', payload:{ ids:[id] } });
-        closeDialog('singleModal');
-        showToast('Added ✔');
-        await load();
-        return;
+        closeDialog('singleModal'); showToast('Added ✔'); await load(); return;
       }
 
       const item={id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''};
       state.keys.unshift(item);
-      // undo for local add
       pushUndo({ type:'add', payload:{ ids:[item.id] } });
-      closeDialog('singleModal');
-      showToast('Added ✔');
-      save();
+      closeDialog('singleModal'); showToast('Added ✔'); save();
     }
 
-    // expose for inline attributes
-window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign;
-window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
-window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
-window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
-window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser;
-window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
-window.onUndo=onUndo;
-window.toggleManageMenu=toggleManageMenu;
-window.setSort=setSort;
+    /* ---------- Expose to inline handlers ---------- */
+    window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign;
+    window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
+    window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
+    window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
+    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser;
+    window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
+    window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
 
-    // keyboard shortcut for Undo
+    function toggleManageMenu(){
+      var m = document.getElementById('manageMenu'); if(!m) return;
+      var isOpen = m.style.display === 'block'; m.style.display = isOpen ? 'none' : 'block';
+    }
+    document.addEventListener('click', function(e){
+      var wrap = document.querySelector('.menu-wrap'); var menu = document.getElementById('manageMenu');
+      if(!wrap || !menu) return; if(!wrap.contains(e.target)){ if(menu.style.display==='block') menu.style.display='none'; }
+    });
+
     document.addEventListener('keydown', function(e){
-      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='z'){
-        e.preventDefault();
-        onUndo();
-      }
+      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); onUndo(); }
+      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); const s=document.getElementById('search'); if(s){ s.focus(); s.select(); } }
     });
 
-    // Enable the Continue button only when a user is chosen and a password is typed
-    function toggleLoginButton(){
-      var pick = document.getElementById('loginPick');
-      var pass = document.getElementById('loginPass');
-      var btn  = document.getElementById('loginGo');
-      if(!btn) return;
-      var hasUser = !!(pick && pick.value);
-      var hasPass = !!(pass && pass.value && pass.value.length>0);
-      btn.disabled = !(hasUser && hasPass);
-    }
-
-    // Keep button/tick state in sync
-    document.addEventListener('DOMContentLoaded', function(){
-      var pick = document.getElementById('loginPick');
-      var pass = document.getElementById('loginPass');
-      if(pick) pick.addEventListener('change', toggleLoginButton);
-      if(pass) pass.addEventListener('input', toggleLoginButton);
-      toggleLoginButton();
-    });
-
-    // Also update when preset user is picked
-    (function(){
-      var _pickPresetUser = window.pickPresetUser;
-      window.pickPresetUser = function(name){
-        if(typeof _pickPresetUser === 'function') _pickPresetUser(name);
-        toggleLoginButton();
-      };
-    })();
-
-    // init
+    /* ---------- init ---------- */
     (function(){
       applyTheme();
       startLoginRotator();
@@ -1764,12 +1118,14 @@ window.setSort=setSort;
       load();
       if(!Array.isArray(state.keys)) state.keys=[];
       render();
-      // ensure we start at top-left on first load
-      window.scrollTo(0,0);
-      document.documentElement.scrollLeft = 0;
-      document.body.scrollLeft = 0;
+      window.scrollTo(0,0); document.documentElement.scrollLeft = 0; document.body.scrollLeft = 0;
     })();
   </script>
-  <button id="backTop" onclick="scrollTopSmooth()" aria-label="Back to top">↑ Top</button>
+
+  <button id="backTop" onclick="scrollTopSmooth()" aria-label="Back to top" style="position:fixed;right:16px;bottom:16px;display:none;">↑ Top</button>
+  <script>
+    function scrollTopSmooth(){ window.scrollTo({top:0,behavior:'smooth'}); }
+    (function(){ const b=document.getElementById('backTop'); window.addEventListener('scroll',()=>{ if(window.scrollY>300){ b.style.display='block'; } else { b.style.display='none'; } }); })();
+  </script>
 </body>
-</html>     
+</html>
