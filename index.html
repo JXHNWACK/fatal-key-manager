@@ -270,36 +270,29 @@
       .tab{ width:100%; text-align:center; padding:8px 10px; font-size:12px; }
       .tabs .tab-underline{ display:none !important; }
 
-      /* Toolbar: 2-per-row layout on small screens */
-      .toolbar .group.search{ display:grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); align-items:stretch; gap:8px; }
-      #search{ width:100%; }
-
-      /* Action buttons grid: 2-per-row */
-      .action-grid{ display:grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; width:100%; }
-      .action-grid .left-stack, .action-grid .right-row{ display:contents !important; }
-      .action-grid button{ width:100% !important; }
-
-      /* Toolbar unified 2-column grid (3 rows) */
-      .toolbar { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      /* Toolbar: unified 2-col grid (exactly 3 rows) */
+      .toolbar { display: grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
       .toolbar .group { display: contents !important; }
       .action-grid { display: contents !important; }
-      .action-grid .left-stack { display: flex !important; gap: 6px; align-items: stretch; }
       .action-grid .right-row { display: contents !important; }
 
-      /* Compact sizing so everything fits neatly within 3 rows */
-      .toolbar button, .toolbar select { font-size: 12px; padding: 8px 10px; }
+      /* Row 1: search | type */
+      #search{ order:1; width:100%; }
+      #typeFilter{ order:2; width:100%; }
 
-      /* Explicit order: Row1 search+type, Row2 clear+undo, Row3 refresh+manage, Bulk full width */
-      #search { order: 1; width: 100%; }
-      #typeFilter { order: 2; width: 100%; }
-      #clearBtn { order: 3; width: 100%; }
-      .action-grid .left-stack button:nth-child(2) { order: 4; width: 100%; } /* Undo */
-      #refreshBtn { order: 5; width: 100%; }
-      #manageBtn { order: 6; width: 100%; }
-      #bulkBtn { order: 7; grid-column: span 2; width: 100%; }
+      /* Row 2: refresh | manage */
+      #refreshBtn{ order:3; width:100%; }
+      #manageBtn{ order:4; width:100%; }
+
+      /* Row 3: clear+undo (as a mini-grid) | bulk */
+      .action-grid .left-stack{ order:5; display:grid !important; grid-template-columns: 1fr 1fr; gap:8px; width:100%; }
+      #bulkBtn{ order:6; width:100%; }
+
+      /* Compact sizing */
+      .toolbar button, .toolbar select{ font-size:12px; padding:8px 10px; }
 
       /* Hide theme toggle on mobile */
-      #themeToggle { display: none !important; }
+      #themeToggle{ display:none !important; }
     }
 
     @media (max-width: 540px){
