@@ -238,6 +238,23 @@
     .badge.Month{ background:rgba(239,71,111,.18); color:var(--danger); }
     .badge.Lifetime{ background:rgba(14,159,121,.18); color:var(--ok); }
 
+    /* --- Stats bar & highlights & product badges --- */
+    .stats{ display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:10px; margin:12px 0 14px; }
+    .stat-card{ background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:12px; box-shadow:var(--shadow); }
+    .stat-title{ font-size:12px; color:var(--muted); margin:0 0 6px; text-transform:uppercase; letter-spacing:.6px; }
+    .stat-value{ font-size:20px; font-weight:800; margin:0; }
+    .stat-sub{ font-size:12px; color:var(--muted); margin-top:4px; }
+
+    mark.hl{ background: rgba(255,209,102,.35); color: inherit; padding: 0 2px; border-radius: 4px; }
+
+    .pbadge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.3px; }
+    .pbadge.p-shadow{ background:rgba(105,207,218,.18); color:var(--accent); border:1px solid rgba(105,207,218,.35); }
+    .pbadge.p-black{ background:rgba(255,255,255,.06); color:#E7F6F7; border:1px solid rgba(255,255,255,.18); }
+    .pbadge.p-nebula{ background:rgba(121,86,255,.18); color:#A99CFF; border:1px solid rgba(121,86,255,.35); }
+    .pbadge.p-fatality{ background:rgba(239,71,111,.18); color:#EF476F; border:1px solid rgba(239,71,111,.35); }
+
+    .footer-note{ margin: 22px auto 10px; text-align:center; color:var(--muted); font-size:12px; opacity:.9; }
+
     @keyframes pulse-ok { 0%{ box-shadow: 0 0 0 0 rgba(6,214,160,.70);} 50%{ box-shadow: 0 0 20px 6px rgba(6,214,160,.35);} 100%{ box-shadow: 0 0 0 0 rgba(6,214,160,.70);} }
     .chip .dot.ok{ animation: pulse-ok 2s ease-in-out infinite; }
 
@@ -378,10 +395,18 @@
     </div>
 
     <div class="tabs" id="tabs"></div>
+    <div id="statsBar" class="stats" aria-live="polite"></div>
 
     <div class="toolbar">
       <div class="group search">
         <input id="search" type="text" placeholder="Search keys, users, reason… (⌘/Ctrl + K)" style="flex:1" oninput="onSearchInput(this.value)" />
+        <select id="typeFilter" onchange="onTypeFilter(this.value)" title="Filter by key type">
+          <option value="All">All Types</option>
+          <option value="Day">Day</option>
+          <option value="Week">Week</option>
+          <option value="Month">Month</option>
+          <option value="Lifetime">Lifetime</option>
+        </select>
         <div class="action-grid">
           <div class="left-stack">
             <button type="button" class="btn-ghost" onclick="onClearSearch()" title="Clear search">🧹 Clear</button>
@@ -394,6 +419,7 @@
         </div>
       </div>
       <div class="group menu-wrap">
+        <button type="button" class="btn-ghost" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙 / ☀️</button>
         <button type="button" class="btn-primary" onclick="toggleManageMenu()" aria-haspopup="true" aria-expanded="false">Manage ▾</button>
         <div id="manageMenu" class="dropdown" role="menu" aria-label="Manage actions">
           <button type="button" class="item" onclick="onNewSingle()">➕ New Single</button>
@@ -754,9 +780,21 @@
 
     /* ---------- local state ---------- */
     const STORAGE_KEY='fs-key-manager-v1';
-    const state={ keys:[], filterProduct:'All', search:'', sortKey:'', sortDir:'asc' };
+    const state={ keys:[], filterProduct:'All', filterType:'All', search:'', sortKey:'', sortDir:'asc' };
 
-    function applyTheme(){ document.documentElement.classList.remove('light'); }
+    function applyTheme(){
+      try{
+        const pref = localStorage.getItem('fs_theme') || 'dark';
+        if(pref === 'light'){ document.documentElement.classList.add('light'); }
+        else{ document.documentElement.classList.remove('light'); }
+      }catch(e){ document.documentElement.classList.remove('light'); }
+    }
+    function toggleTheme(){
+      const isLight = document.documentElement.classList.contains('light');
+      const next = isLight ? 'dark' : 'light';
+      try{ localStorage.setItem('fs_theme', next); }catch(e){}
+      applyTheme();
+    }
 
     function sortRows(rows){
       const key = state.sortKey; if(!key) return rows;
@@ -857,12 +895,14 @@
     function visibleRows(){
       const inAssigned = state.filterProduct==='Assigned';
       const q=(state.search||'').toLowerCase();
+      const typeWanted = state.filterType || 'All';
       return state.keys.filter(k=>{
         const assignedish=(k.status==='assigned'||k.status==='expired');
         const statusOk = inAssigned ? assignedish : (k.status==='available');
         const productOk = state.filterProduct==='All' || state.filterProduct==='Assigned' || k.product===state.filterProduct;
+        const typeOk = (typeWanted==='All') ? true : (k.type===typeWanted);
         const hay=[k.code,k.product,k.type,k.status,k.assignedTo||'',k.reason||'',k.date||''].join(' ').toLowerCase();
-        return statusOk && productOk && (!q || hay.indexOf(q)!==-1);
+        return statusOk && productOk && typeOk && (!q || hay.indexOf(q)!==-1);
       });
     }
 
@@ -987,6 +1027,17 @@
     function renderTable(){
       const rows=visibleRows(); const sorted = sortRows(rows);
       if(!rows.length){ $('#tableWrap').innerHTML='<div class="empty">No keys yet. Use <strong>Bulk Add</strong> to paste your list, or <strong>New Single</strong> to add one.</div>'; return; }
+      const query = (state.search || '').trim();
+      function highlight(text){
+        if(!query) return escapeHtml(String(text||''));
+        const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'ig');
+        return escapeHtml(String(text||'')).replace(re, '<mark class="hl">$1</mark>');
+      }
+      function pclass(p){
+        if(!p) return 'pbadge';
+        const slug = String(p).toLowerCase();
+        return 'pbadge p-' + slug.replace(/[^a-z0-9]+/g,'');
+      }
       const head = '<thead><tr>'
         + '<th>Key</th>'
         + '<th class="sortable" onclick="setSort(\'product\')">Product'+sortCaret('product')+'</th>'
@@ -1003,12 +1054,12 @@
           ? '<span class="chip" title="Assigned by '+escapeHtml(k.assignedBy||'unknown')+'"><span class="dot warn"></span>Assigned</span>'
           : '<span class="chip"><span class="dot ok"></span>Available</span>';
         return '<tr>'
-          + '<td class="key-cell" onclick="copyCode(\''+k.id+'\')" title="Click to copy">'+escapeHtml(k.code)+'</td>'
-          + '<td>'+escapeHtml(k.product)+'</td>'
+          + '<td class="key-cell" onclick="copyCode(\''+k.id+'\')" title="Click to copy">'+highlight(k.code)+'</td>'
+          + '<td><span class="'+pclass(k.product)+'">'+highlight(k.product)+'</span></td>'
           + '<td><span class="badge '+escapeHtml(k.type)+'">'+escapeHtml(k.type)+'</span></td>'
           + '<td>'+chip+'</td>'
-          + '<td>'+escapeHtml(k.assignedTo||'')+'</td>'
-          + '<td>'+escapeHtml(k.reason||'')+'</td>'
+          + '<td>'+highlight(k.assignedTo||'')+'</td>'
+          + '<td>'+highlight(k.reason||'')+'</td>'
           + '<td>'+(k.date||'')+'</td>'
           + '<td class="actions">'
             + '<button type="button" onclick="copyCode(\''+k.id+'\')">Copy</button>'
@@ -1021,14 +1072,34 @@
       $('#tableWrap').innerHTML='<table>'+head+'<tbody>'+body+'</tbody></table>';
     }
 
+    function renderStats(){
+      const keys = state.keys || [];
+      const total = keys.length;
+      const assigned = keys.filter(k => k.status==='assigned' || k.status==='expired').length;
+      const available = keys.filter(k => k.status==='available').length;
+
+      const byProd = keys.reduce((a,k)=>{ const p=k.product||'Unknown'; a[p]=(a[p]||0)+1; return a; }, {});
+      const top = Object.entries(byProd).sort((a,b)=>b[1]-a[1]).slice(0,2);
+
+      const host = document.getElementById('statsBar'); if(!host) return;
+      host.innerHTML = [
+        '<div class="stat-card"><div class="stat-title">Total Keys</div><div class="stat-value">'+total+'</div><div class="stat-sub">All products</div></div>',
+        '<div class="stat-card"><div class="stat-title">Available</div><div class="stat-value">'+available+'</div><div class="stat-sub">Ready to assign</div></div>',
+        '<div class="stat-card"><div class="stat-title">Assigned</div><div class="stat-value">'+assigned+'</div><div class="stat-sub">In use</div></div>',
+        '<div class="stat-card"><div class="stat-title">Top Products</div><div class="stat-value">'+(top[0]? top[0][0]+': '+top[0][1] : '—')+'</div><div class="stat-sub">'+(top[1]? top[1][0]+': '+top[1][1] : '&nbsp;')+'</div></div>'
+      ].join('');
+    }
+
     function render(){
-      renderTabs(); renderTable();
+      renderTabs(); renderTable(); renderStats();
       var inp = document.getElementById('search'); if(inp && inp.value !== state.search){ inp.value = state.search; }
+      var tf = document.getElementById('typeFilter'); if(tf && tf.value !== state.filterType){ tf.value = state.filterType; }
     }
 
     /* ---------- Toolbar handlers ---------- */
     function onSearchInput(val){ state.search = (val || ''); render(); }
     function onClearSearch(){ state.search=''; const i=document.getElementById('search'); if(i) i.value=''; render(); }
+    function onTypeFilter(val){ state.filterType = val || 'All'; render(); }
 
     async function onRefreshCloud(){
       if (CLOUD_ENABLED){
@@ -1129,4 +1200,5 @@
     (function(){ const b=document.getElementById('backTop'); window.addEventListener('scroll',()=>{ if(window.scrollY>300){ b.style.display='block'; } else { b.style.display='none'; } }); })();
   </script>
 </body>
+<div class="footer-note">Fatal Services Key Manager · v1.2 · Updated 23 Oct 2025</div>
 </html>
