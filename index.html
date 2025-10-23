@@ -445,6 +445,7 @@
             <option value="Shadow">Shadow</option>
             <option value="Black">Black</option>
             <option value="Nebula">Nebula</option>
+            <option value="Fatality">Fatality</option>
           </select>
         </div>
         <div class="field">
@@ -472,7 +473,7 @@
       </div>
       <div class="modal-body">
         <div class="field"><label>Product</label>
-          <select id="s_product"><option>Shadow</option><option>Black</option><option>Nebula</option></select></div>
+          <select id="s_product"><option>Shadow</option><option>Black</option><option>Nebula</option><option>Fatality</option></select>
         <div class="field"><label>Type</label>
           <select id="s_type"><option>Day</option><option>Week</option><option>Month</option><option>Lifetime</option></select></div>
         <div class="field"><label>Key code</label>
@@ -827,7 +828,7 @@
       const allCount = available.length;
       const assignedCount = state.keys.filter(k=>k.status==='assigned' || k.status==='expired').length;
 
-      const tabs = ['All','Shadow','Black','Nebula','Assigned'].map(p=>{
+      const tabs = ['All','Shadow','Black','Nebula','Fatality','Assigned'].map(p=>{
         let c=0, dot='ok';
         if(p==='All') c = allCount;
         else if(p==='Assigned'){ c = assignedCount; dot='warn'; }
