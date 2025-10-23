@@ -360,6 +360,26 @@
       .user-menu .dropdown{ display:block !important; position: static; background: transparent; border: none; box-shadow: none; padding: 0; margin: 0; }
       .user-menu .dropdown button{ background: var(--panel-2); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 6px 10px; font-size: 12px; }
 
+      /* Manage menu: 2‑column grid on mobile */
+      .toolbar .menu-wrap{ width:100%; }
+      .toolbar .menu-wrap #manageBtn{ width:100%; }
+      .toolbar .dropdown{
+        display:grid !important;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap:8px;
+        position: static; /* sit in flow on mobile */
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        min-width: 0;
+      }
+      .toolbar .dropdown .item,
+      .toolbar .dropdown label.item{ width:100%; }
+      .toolbar .dropdown .divider{ grid-column: 1 / -1; margin:4px 0; }
+      /* Make the first item (New Single) span full width for emphasis */
+      .toolbar .dropdown .item:first-of-type{ grid-column: 1 / -1; }
+
       /* Compact stats bar on mobile */
       .stats{ grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; margin:10px 0 12px; }
       .stat-card{ padding:8px 10px; border-radius:10px; }
