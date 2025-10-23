@@ -328,6 +328,13 @@
       .user-menu #userBtn{ display:none; }
       .user-menu .dropdown{ display:block !important; position: static; background: transparent; border: none; box-shadow: none; padding: 0; margin: 0; }
       .user-menu .dropdown button{ background: var(--panel-2); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 6px 10px; font-size: 12px; }
+
+      /* Compact stats bar on mobile */
+      .stats{ grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; margin:10px 0 12px; }
+      .stat-card{ padding:8px 10px; border-radius:10px; }
+      .stat-title{ font-size:10px; margin-bottom:4px; }
+      .stat-value{ font-size:14px; }
+      .stat-sub{ font-size:10px; }
     }
   </style>
 </head>
