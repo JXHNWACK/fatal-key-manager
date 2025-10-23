@@ -269,6 +269,15 @@
       .tabs{ display:grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0 10px; }
       .tab{ width:100%; text-align:center; padding:8px 10px; font-size:12px; }
       .tabs .tab-underline{ display:none !important; }
+
+      /* Toolbar: 2-per-row layout on small screens */
+      .toolbar .group.search{ display:grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); align-items:stretch; gap:8px; }
+      #search{ width:100%; }
+
+      /* Action buttons grid: 2-per-row */
+      .action-grid{ display:grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; width:100%; }
+      .action-grid .left-stack, .action-grid .right-row{ display:contents !important; }
+      .action-grid button{ width:100% !important; }
     }
 
     @media (max-width: 540px){
