@@ -1151,12 +1151,18 @@
         const rows = newCodes.map(code => ({ id: uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser }));
         await cloudAppend(rows);
         pushUndo({ type:'add', payload:{ ids: rows.map(r=>r.id) } });
+        state.filterProduct = product;
+        state.filterType = type;
+        state.search = '';
         closeDialog('bulkModal'); showToast('Added ✔'); await load(); return;
       }
 
       const newItems=newCodes.map(code=>({id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''}));
       state.keys.unshift(...newItems);
       pushUndo({ type:'add', payload:{ ids: newItems.map(r=>r.id) } });
+      state.filterProduct = product;
+      state.filterType = type;
+      state.search = '';
       closeDialog('bulkModal'); showToast('Added ✔'); save();
     }
 
@@ -1171,12 +1177,18 @@
         const id = uid();
         await cloudAppend([{ id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser }]);
         pushUndo({ type:'add', payload:{ ids:[id] } });
+        state.filterProduct = product;
+        state.filterType = type;
+        state.search = '';
         closeDialog('singleModal'); showToast('Added ✔'); await load(); return;
       }
 
       const item={id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''};
       state.keys.unshift(item);
       pushUndo({ type:'add', payload:{ ids:[item.id] } });
+      state.filterProduct = product;
+      state.filterType = type;
+      state.search = '';
       closeDialog('singleModal'); showToast('Added ✔'); save();
     }
 
