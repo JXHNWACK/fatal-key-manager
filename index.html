@@ -1143,6 +1143,7 @@
         const key = c.toLowerCase();
         if(allExisting.has(key)){ skipped.push(c); } else { newCodes.push(c); allExisting.add(key); }
       }
+      const skippedCount = skipped.length;
       if(skipped.length){ alert('Skipped duplicates:\n' + skipped.join('\n')); }
       if(newCodes.length===0){ closeDialog('bulkModal'); return; }
 
@@ -1154,6 +1155,7 @@
         state.filterProduct = product;
         state.filterType = type;
         state.search = '';
+        showBanner('Added '+rows.length+' '+product+' • '+type+' key(s).'+(skippedCount? ' Skipped '+skippedCount+' duplicate(s).':''));
         closeDialog('bulkModal'); showToast('Added ✔'); await load(); return;
       }
 
@@ -1163,6 +1165,7 @@
       state.filterProduct = product;
       state.filterType = type;
       state.search = '';
+      showBanner('Added '+newItems.length+' '+product+' • '+type+' key(s).'+(skippedCount? ' Skipped '+skippedCount+' duplicate(s).':''));
       closeDialog('bulkModal'); showToast('Added ✔'); save();
     }
 
