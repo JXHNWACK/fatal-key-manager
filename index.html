@@ -574,9 +574,26 @@
 
     /* ======== SteinHQ v2 Cloud (resilient) ======== */
     const STEIN_BASE    = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
-    const STEIN_SHEET   = 'STEIN_SHEET';         // <— your tab name
+    const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
     const STEIN_TOKEN   = '';             // add X-Auth-Token if private
     const CLOUD_ENABLED = true;
+    const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy'];
+    function validateColumns(rows){
+      try{
+        const sample = rows && rows[0] ? rows[0] : null;
+        if(!sample){ return true; }
+        const have = Object.keys(sample);
+        const missing = EXPECTED_COLS.filter(k => !have.includes(k));
+        if(missing.length){
+          const msg = 'Your Google Sheet tab "'+STEIN_SHEET+'" is missing header(s): '+missing.join(', ')+'.\n' +
+                      'Add these EXACT headers in row 1 (A1..I1): '+EXPECTED_COLS.join(', ')+' — then try again.';
+          console.warn('[FS Key Manager] Missing headers:', missing);
+          showBanner(msg);
+          return false;
+        }
+        return true;
+      }catch(e){ return true; }
+    }
 
     function steinHeaders(){
       const h = { 'Accept':'application/json', 'Content-Type':'application/json' };
@@ -866,6 +883,7 @@
         try{
           const rows = await cloudGetAll();
           state.keys = rows.map(coerceRow);
+          validateColumns(rows);
           setCloudStatus(true);
           return render();
         }catch(err){
