@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fatal Services — Key Manager</title>
+  <title>Rogue Community — Key Manager</title>
   <style>
     :root{
       --bg:#12111F;
@@ -37,7 +37,7 @@
     .container{max-width:1100px; margin:24px auto; padding:0 16px}
     .header{display:flex; align-items:center; gap:16px; padding:16px; background:linear-gradient(180deg, rgba(244,113,116,.08), rgba(244,113,116,.02)); border:1px solid rgba(244,113,116,.25); border-radius:var(--radius); box-shadow:var(--shadow)}
     .logo{
-      width:78px; height:78px; border-radius:50%; background:#0c0c16 url('./new_logo.png') center/cover no-repeat;
+      width:78px; height:78px; border-radius:50%; background:#0c0c16 url('./fs_logo_emoji.png') center/cover no-repeat;
       box-shadow:0 0 30px rgba(244,113,116,.55) inset, 0 0 22px rgba(244,113,116,.35);
       animation: pulse-glow 2.5s infinite; position: relative; z-index: 1;
     }
@@ -361,17 +361,13 @@
   <div id="welcomeScreen" aria-modal="true" role="dialog">
     <div class="welcome-card">
       <div class="welcome-greeting" aria-hidden="true" style="display:none; opacity:0;"></div>
-      <img src="./fs_logo_emoji.png" alt="Fatal Services Logo">
+      <img src="./fs_logo_emoji.png" alt="Rogue Community Logo">
       <div id="loginProgress" class="login-progress" aria-hidden="true"><div class="bar"></div></div>
-      <h1>Fatal Services</h1>
+      <h1>Rogue Community</h1>
       <p>Key Manager — Login</p>
       <form class="welcome-form" onsubmit="return attemptLogin(event)">
-        <select id="loginPick" onchange="pickPresetUser(this.value)">
-          <option value="">Choose a user…</option>
-          <option value="UncleJoey">UncleJoey</option>
-          <option value="UncleG">UncleG</option>
-          <option value="UncleTrash">UncleTrash</option>
-          <option value="JXHNWACK">JXHNWACK</option>
+        <select id="loginPick" onchange="pickPresetUser(this.value)" style="display:none;">
+          <option value="Administrator" selected>Administrator</option>
         </select>
         <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
         <div class="welcome-actions">
@@ -385,10 +381,10 @@
 
   <div class="container">
     <div class="header">
-      <div class="logo" aria-label="Fatal Services logo"></div>
+      <div class="logo" aria-label="Rogue Community logo"></div>
       <div class="title">
-        <h1>Fatal Services — Key Manager</h1>
-        <p>A tool for staff to track and distribute keys provided by Fatal Services.</p>
+        <h1>Rogue Community — Key Manager</h1>
+        <p>A tool for staff to track and distribute keys provided by Rogue Community.</p>
       </div>
       <div class="right">
         <span id="netChip" class="chip"><span class="dot danger"></span><span id="netText">Offline</span></span>
@@ -565,10 +561,7 @@
 
     /* ---------- Per-user accents ---------- */
     const USER_ACCENTS={
-      'JXHNWACK':  ['#F47174','#D94447'], // red
-      'UncleJoey': ['#F47174','#D94447'], // red
-      'UncleG':    ['#F47174','#D94447'], // red
-      'UncleTrash':['#F47174','#D94447']  // red
+      'Administrator':  ['#F47174','#D94447'], // red
     };
     function applyUserAccent(user){
       var pair=USER_ACCENTS[user];
@@ -592,7 +585,7 @@
         if(missing.length){
           const msg = 'Your Google Sheet tab "'+STEIN_SHEET+'" is missing header(s): '+missing.join(', ')+'.\n' +
                       'Add these EXACT headers in row 1 (A1..I1): '+EXPECTED_COLS.join(', ')+' — then try again.';
-          console.warn('[FS Key Manager] Missing headers:', missing);
+          console.warn('[RC Key Manager] Missing headers:', missing);
           showBanner(msg);
           return false;
         }
@@ -721,7 +714,7 @@
     window.addEventListener('offline', function(){ setNetStatus(false); });
 
     /* ---------- Login (robust) ---------- */
-    const USERS = { 'JXHNWACK':'1212', 'UncleJoey':'password', 'UncleG':'password', 'UncleTrash':'password' };
+    const USERS = { 'Administrator':'1212' };
 
     function pickPresetUser(name){
       if(!name) return;
@@ -730,7 +723,7 @@
     }
 
     var __rotTimer = null;
-    var __rotMsgs = [ 'Welcome to Fatal Services','Securely manage your keys','Staff access only' ];
+    var __rotMsgs = [ 'Welcome to Rogue Community','Securely manage your keys','Staff access only' ];
     var __rotIdx = 0;
     function startLoginRotator(){
       var el = document.getElementById('loginRotator'); if(!el) return;
@@ -1259,5 +1252,5 @@
     (function(){ const b=document.getElementById('backTop'); window.addEventListener('scroll',()=>{ if(window.scrollY>300){ b.style.display='block'; } else { b.style.display='none'; } }); })();
   </script>
 </body>
-<div class="footer-note">Fatal Services Key Manager · v1.2 · Updated 23 Oct 2025</div>
+<div class="footer-note">Rogue Community Key Manager · v1.2 · Updated 23 Oct 2025</div>
 </html>
