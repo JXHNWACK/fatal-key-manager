@@ -590,6 +590,7 @@
     const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
     const STEIN_TOKEN   = '';             // add X-Auth-Token if private
     const CLOUD_ENABLED = true;
+    const DISCORD_WEBHOOK_URL = '';       // <— PASTE YOUR DISCORD WEBHOOK URL HERE
     const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy'];
     function validateColumns(rows){
       try{
@@ -693,6 +694,23 @@
       };
       await backoff(exec);
       setCloudStatus(true);
+    }
+
+    async function sendDiscordNotification(embed){
+      if (!DISCORD_WEBHOOK_URL) return;
+      try {
+        await fetch(DISCORD_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: 'RC Key Manager',
+            avatar_url: 'https://raw.githubusercontent.com/JXHNWACK/fatal-key-manager/main/fs_logo_emoji.png',
+            embeds: [embed]
+          })
+        });
+      } catch (e) {
+        console.warn('Discord notification failed:', e);
+      }
     }
 
     /* ---------- Cloud/Net status UI ---------- */
@@ -1010,6 +1028,17 @@
       const patch = { status:'available', assignedTo:'', reason:'', date:'', assignedBy:'' };
       if(CLOUD_ENABLED){ await cloudPatchById(k.id, patch); showToast('Released ✔'); await load(); return; }
       Object.assign(k, patch); showToast('Released ✔'); save();
+
+      sendDiscordNotification({
+        title: '↩️ Key Released',
+        description: `The key \`${prev.code}\` previously assigned to **${prev.assignedTo}** has been released and is now available.`,
+        color: 45001, // #00B031 (a shade of ok)
+        fields: [
+          { name: 'Product', value: prev.product, inline: true },
+          { name: 'Released By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true }
+        ],
+        timestamp: new Date().toISOString()
+      });
     }
 
     let assignId=null;
@@ -1032,7 +1061,21 @@
         assignedBy: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown'
       };
       if(CLOUD_ENABLED){ await cloudPatchById(k.id, patch); closeDialog('assignModal'); showToast('Saved ✔'); await load(); return; }
-      Object.assign(k, patch); closeDialog('assignModal'); showToast('Saved ✔'); save();
+      Object.assign(k, patch);
+
+      sendDiscordNotification({
+        title: '🔑 Key Assigned',
+        color: 16763904, // #FFD166 (warn)
+        fields: [
+          { name: 'Product', value: k.product, inline: true },
+          { name: 'Key', value: '`' + k.code + '`', inline: true },
+          { name: 'Assigned To', value: patch.assignedTo, inline: false },
+          { name: 'Reason', value: patch.reason || '_Not provided_', inline: true },
+          { name: 'Assigned By', value: patch.assignedBy, inline: true }
+        ],
+        timestamp: new Date().toISOString()
+      });
+      closeDialog('assignModal'); showToast('Saved ✔'); save();
     }
 
     /* ---------- CSV / backup / restore ---------- */
@@ -1266,6 +1309,16 @@
       state.filterType = type;
       state.search = '';
       showBanner('Added '+newItems.length+' '+product+' • '+type+' key(s).'+(skippedCount? ' Skipped '+skippedCount+' duplicate(s).':''));
+
+      sendDiscordNotification({
+        title: '📦 Stock Added (Bulk)',
+        description: `**${newItems.length}** new keys were added.`,
+        color: 3092790, // A nice blue
+        fields: [
+          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true }
+        ],
+        timestamp: new Date().toISOString()
+      });
       closeDialog('bulkModal'); showToast('Added ✔'); save();
     }
 
@@ -1293,6 +1346,16 @@
       state.filterType = type;
       state.search = '';
       closeDialog('singleModal'); showToast('Added ✔'); save();
+
+      sendDiscordNotification({
+        title: '➕ New Key Added',
+        color: 3092790, // A nice blue
+        fields: [
+          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true },
+          { name: 'Key', value: '`' + code + '`', inline: false }
+        ],
+        timestamp: new Date().toISOString()
+      });
     }
 
     /* ---------- Expose to inline handlers ---------- */
