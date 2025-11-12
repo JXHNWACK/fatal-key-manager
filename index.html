@@ -1358,12 +1358,27 @@
       });
     }
 
+    function testDiscordWebhook(){
+      if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW')) {
+        alert('Please set your real Discord Webhook URL in the index.html file first.');
+        return;
+      }
+      console.log('Sending test notification to Discord...');
+      sendDiscordNotification({
+        title: '✅ Test Successful',
+        description: 'If you can see this message, your webhook is configured correctly!',
+        color: 45001, // green
+        timestamp: new Date().toISOString()
+      }).then(() => console.log('Test notification sent.'))
+        .catch(e => console.error('Test notification failed:', e));
+    }
+
     /* ---------- Expose to inline handlers ---------- */
     window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign;
     window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
     window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
     window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
-    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct;
+    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.testDiscordWebhook=testDiscordWebhook;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
 
