@@ -698,18 +698,18 @@
 
     async function sendDiscordNotification(embed){
       if (!DISCORD_WEBHOOK_URL) return;
-      try {
-        await fetch(DISCORD_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: 'RC Key Manager',
-            avatar_url: 'https://raw.githubusercontent.com/JXHNWACK/fatal-key-manager/main/fs_logo_emoji.png',
-            embeds: [embed]
-          })
-        });
-      } catch (e) {
-        console.warn('Discord notification failed:', e);
+      const response = await fetch(DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'RC Key Manager',
+          avatar_url: 'https://raw.githubusercontent.com/JXHNWACK/Rogue-Community-Key-Manager/main/fs_logo_emoji.png',
+          embeds: [embed]
+        })
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Discord notification failed: ${response.status} ${errorText}`);
       }
     }
 
