@@ -120,8 +120,6 @@
     td:first-child{border-top-left-radius:12px; border-bottom-left-radius:12px}
     td:last-child{border-top-right-radius:12px; border-bottom-right-radius:12px}
 
-    .actions{display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-end;}
-
     .empty{padding:24px; text-align:center; color:var(--muted); border:1px dashed rgba(255,255,255,.15); border-radius:12px; background:rgba(255,255,255,.02)}
 
     dialog{border:none; border-radius:16px; padding:0; background:var(--panel); color:var(--text); box-shadow:var(--shadow); width:min(520px, 92vw)}
