@@ -43,7 +43,8 @@
     const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
     const STEIN_TOKEN   = '';             // add X-Auth-Token if private
     const CLOUD_ENABLED = true;
-    const EXPECTED_COLS = ['id', 'code', 'product', 'type', 'status', 'assignedTo', 'reason', 'date', 'assignedBy'];
+    const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW';       // <— PASTE YOUR DISCORD WEBHOOK URL HERE
+    const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy'];
     function validateColumns(rows){
       try{
         const sample = rows && rows[0] ? rows[0] : null;
@@ -149,9 +150,8 @@
     }
 
     async function sendDiscordNotification(embed){
-      const webhookUrl = state.settings.webhookUrl;
-      if (!webhookUrl) return;
-      const response = await fetch(webhookUrl, {
+      if (!DISCORD_WEBHOOK_URL) return;
+      const response = await fetch(DISCORD_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -176,6 +176,7 @@
       var label = document.getElementById('cloudLabel');
 
       if(dot){ dot.classList.remove('ok','danger'); dot.classList.add(ok ? 'ok' : 'danger'); }
+
       if(ok){
         LAST_SYNC_AT = new Date();
         if(label){ label.textContent = 'Cloud • ' + LAST_SYNC_AT.toLocaleTimeString(); }
@@ -304,8 +305,6 @@
     const state={
       keys:[],
       products:[],
-      settings: { webhookUrl: '', lowStockThreshold: 5 },
-      lowStockNotified: [],
       filterProduct:'All',
       filterType:'All',
       search:'', sortKey:'', sortDir:'asc'
@@ -376,8 +375,11 @@
           const raw=localStorage.getItem(STORAGE_KEY);
           if(raw){
             const localState = JSON.parse(raw);
-            if (localState.settings) state.settings = { ...state.settings, ...localState.settings };
-            if (localState.lowStockNotified) state.lowStockNotified = localState.lowStockNotified;
+          }
+          if(raw){
+            const localState = JSON.parse(raw);
+            if (localState.products && localState.products.length > 0) {
+              state.products = localState.products;
           }
           if(raw){
             const localState = JSON.parse(raw);
@@ -484,7 +486,6 @@
       const k=state.keys.find(x=>x.id===id); if(!k) return;
       pushUndo({ type:'delete', payload:{ items:[ Object.assign({}, k) ] } });
       if(CLOUD_ENABLED){ await cloudDeleteById(k.id); await load(); return; }
-      checkLowStock();
       state.keys=state.keys.filter(x=>x.id!==id); save();
     }
 
@@ -767,46 +768,6 @@
       closeDialog('editProductModal');
     }
 
-    function openSettings(){
-      $('#settingWebhookUrl').value = state.settings.webhookUrl || '';
-      $('#settingLowStock').value = state.settings.lowStockThreshold || 5;
-      openDialog('settingsModal');
-    }
-
-    async function saveSettings(){
-      state.settings.webhookUrl = ($('#settingWebhookUrl').value || '').trim();
-      state.settings.lowStockThreshold = parseInt($('#settingLowStock').value, 10) || 5;
-      await save(false); // Save without re-rendering the whole UI
-      closeDialog('settingsModal');
-      showToast('Settings saved ✔');
-    }
-
-    function checkLowStock(){
-      const threshold = state.settings.lowStockThreshold || 5;
-      const available = state.keys.filter(k => k.status === 'available');
-      const counts = available.reduce((acc, key) => {
-        acc[key.product] = (acc[key.product] || 0) + 1;
-        return acc;
-      }, {});
-
-      state.products.forEach(p => {
-        const count = counts[p.name] || 0;
-        const hasBeenNotified = state.lowStockNotified.includes(p.name);
-
-        if (count <= threshold && !hasBeenNotified) {
-          sendDiscordNotification({
-            title: '⚠️ Low Stock Warning!',
-            description: `There are only **${count}** available keys left for **${p.name}**.`,
-            color: 16729344, // A shade of red/orange
-            timestamp: new Date().toISOString()
-          });
-          state.lowStockNotified.push(p.name);
-        } else if (count > threshold && hasBeenNotified) {
-          state.lowStockNotified = state.lowStockNotified.filter(notifiedProduct => notifiedProduct !== p.name);
-        }
-      });
-    }
-
     async function onRefreshCloud(){
       if (CLOUD_ENABLED){
         try{ SYNC_TOASTED = false; await load(); }
@@ -904,7 +865,7 @@
     window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
     window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
     window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
-    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit; window.openSettings=openSettings; window.saveSettings=saveSettings;
+    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
 
