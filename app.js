@@ -375,14 +375,6 @@
           const raw=localStorage.getItem(STORAGE_KEY);
           if(raw){
             const localState = JSON.parse(raw);
-          }
-          if(raw){
-            const localState = JSON.parse(raw);
-            if (localState.products && localState.products.length > 0) {
-              state.products = localState.products;
-          }
-          if(raw){
-            const localState = JSON.parse(raw);
             if (localState.products && localState.products.length > 0) {
               state.products = localState.products;
             }
