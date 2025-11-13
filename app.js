@@ -43,7 +43,8 @@
     const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
     const STEIN_TOKEN   = '';             // add X-Auth-Token if private
     const CLOUD_ENABLED = true;
-    const Cn validateColumns(rows){
+    const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy'];
+    function validateColumns(rows){
       try{
         const sample = rows && rows[0] ? rows[0] : null;
         if(!sample){ return true; }
@@ -148,7 +149,9 @@
     }
 
     async function sendDiscordNotification(embed){
-      const webhookUrl = state.settings.webhookU
+      const webhookUrl = state.settings.webhookUrl;
+      if (!webhookUrl) return;
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -157,12 +160,7 @@
           embeds: [embed]
         })
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Discord notification failed: ${response.status} ${errorText}`);
-      }
     }
-
     /* ---------- Cloud/Net status UI ---------- */
     let LAST_SYNC_AT = null;
     let SYNC_TOASTED = false;
@@ -875,7 +873,7 @@
     window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit; window.openSettings=openSettings; window.saveSettings=saveSettings;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
-
+    function toggleManageMenu(){
       var m = document.getElementById('manageMenu'); if(!m) return;
       var isOpen = m.style.display === 'block'; m.style.display = isOpen ? 'none' : 'block';
     }
