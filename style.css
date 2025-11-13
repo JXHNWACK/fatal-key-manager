@@ -289,6 +289,9 @@
     #bulkText{ min-height: 100px; }
     #bulkModal textarea#bulkText{ width: 100%; box-sizing: border-box; }
 
+    #hamburgerBtn{ display: none; }
+    #mobile-overlay{ display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
+
     @media (max-width: 768px){
       /* Mobile Sidebar (Off-canvas) */
       .app-layout{ display: block; }
@@ -309,9 +312,6 @@
       }
       body.sidebar-open #mobile-overlay{ display: block; }
     }
-    #hamburgerBtn{ display: none; }
-    #mobile-overlay{ display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
-
 
     @media (max-width: 540px){
       html, body{ max-width:100%; overflow-x:hidden; }
