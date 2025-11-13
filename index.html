@@ -508,11 +508,13 @@
       </div>
       <div class="modal-body">
         <div class="field"><label>Product</label>
-          <select id="s_product"></select>
+          <select id="s_product"></select></div>
         <div class="field"><label>Type</label>
-          <select id="s_type"><option>Day</option><option>Week</option><option>Month</option><option>Lifetime</option></select></div>
+          <select id="s_type"><option>Day</option><option>Week</option><option>Month</option><option>Lifetime</option></select>
+        </div>
         <div class="field"><label>Key code</label>
-          <input id="s_code" type="text" placeholder="Paste the actual code" required></div>
+          <input id="s_code" type="text" placeholder="Paste the actual code" required>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" onclick="closeDialog('singleModal')">Cancel</button>
@@ -1341,12 +1343,7 @@
         title: '➕ New Key Added',
         color: 3092790, // A nice blue
         fields: [
-          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true },
-          { name: 'Key', value: '`' + code + '`', inline: false }
-          { name: 'Product', value: product, inline: true },
-          { name: 'Type', value: type, inline: true },
-          { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true },
-          { name: 'Key', value: '`' + code + '`', inline: false },
+          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true }, { name: 'Key', value: '`' + code + '`', inline: false }
         ],
         timestamp: new Date().toISOString()
       });
