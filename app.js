@@ -657,11 +657,11 @@
           + '<td>'+highlight(k.reason||'')+'</td>'
           + '<td>'+(k.date||'')+'</td>'
           + '<td class="actions">'
-            + '<button type="button" class="action-secondary" onclick="copyCode(\''+k.id+'\')">Copy</button>'
+            + '<button type="button" onclick="copyCode(\''+k.id+'\')">Copy</button>'
             + (assignedish
-              ? '<button type="button" class="action-secondary" onclick="openAssign(\''+k.id+'\')">Edit</button><button type="button" onclick="releaseKey(\''+k.id+'\')">Release</button>'
+              ? '<button type="button" onclick="openAssign(\''+k.id+'\')">Edit</button><button type="button" onclick="releaseKey(\''+k.id+'\')">Release</button>'
               : '<button type="button" class="btn-primary" onclick="openAssign(\''+k.id+'\')">Assign</button>')
-            + '<button type="button" class="action-secondary" onclick="removeKey(\''+k.id+'\')" style="border-color: rgba(239,71,111,.5);">Delete</button>'
+            + '<button type="button" onclick="removeKey(\''+k.id+'\')" style="border-color: rgba(239,71,111,.5);">Delete</button>'
           + '</td></tr>';
       }).join('');
       $('#tableWrap').innerHTML='<table>'+head+'<tbody>'+body+'</tbody></table>';

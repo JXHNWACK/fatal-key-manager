@@ -120,14 +120,7 @@
     td:first-child{border-top-left-radius:12px; border-bottom-left-radius:12px}
     td:last-child{border-top-right-radius:12px; border-bottom-right-radius:12px}
 
-    /* Hover Actions */
     .actions{display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-end;}
-    .actions .action-secondary{
-      opacity: 0;
-      transform: translateX(5px);
-      transition: opacity .2s ease, transform .2s ease;
-    }
-    tbody tr:hover .actions .action-secondary{ opacity: 1; transform: translateX(0); }
 
     .empty{padding:24px; text-align:center; color:var(--muted); border:1px dashed rgba(255,255,255,.15); border-radius:12px; background:rgba(255,255,255,.02)}
 
