@@ -294,7 +294,6 @@
       .app-layout{ display: block; }
       #sidebar{
         position: fixed;
-        left: 0; top: 0; bottom: 0;
         transform: translateX(-100%);
       }
       body.sidebar-open #sidebar{
@@ -302,6 +301,7 @@
         box-shadow: 5px 0 25px rgba(0,0,0,.5);
       }
       #hamburgerBtn{
+        background: var(--panel); border: 1px solid rgba(255,255,255,.1); border-radius: 10px;
         display: block;
         position: fixed; top: 16px; left: 16px;
         z-index: 99;
