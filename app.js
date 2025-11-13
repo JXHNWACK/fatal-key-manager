@@ -43,7 +43,7 @@
     const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
     const STEIN_TOKEN   = '';             // add X-Auth-Token if private
     const CLOUD_ENABLED = true;
-    const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy'];
+    const EXPECTED_COLS = ['id', 'code', 'product', 'type', 'status', 'assignedTo', 'reason', 'date', 'assignedBy'];
     function validateColumns(rows){
       try{
         const sample = rows && rows[0] ? rows[0] : null;
@@ -176,7 +176,6 @@
       var label = document.getElementById('cloudLabel');
 
       if(dot){ dot.classList.remove('ok','danger'); dot.classList.add(ok ? 'ok' : 'danger'); }
-
       if(ok){
         LAST_SYNC_AT = new Date();
         if(label){ label.textContent = 'Cloud • ' + LAST_SYNC_AT.toLocaleTimeString(); }
@@ -384,11 +383,6 @@
             const localState = JSON.parse(raw);
             if (localState.products && localState.products.length > 0) {
               state.products = localState.products;
-          }
-          if(raw){
-            const localState = JSON.parse(raw);
-            if (localState.products && localState.products.length > 0) {
-              state.products = localState.products;
             }
           }
         }catch(e){}
@@ -513,7 +507,6 @@
         showToast('Released ✔');
         await load();
         return;
-        checkLowStock();
       }
       Object.assign(k, patch); showToast('Released ✔'); save();
     }
@@ -555,7 +548,6 @@
         showToast('Saved ✔');
         await load();
         return;
-        checkLowStock();
       }
       Object.assign(k, patch);
       closeDialog('assignModal'); showToast('Saved ✔'); save();
@@ -860,7 +852,6 @@
         state.search = '';
         showBanner('Added '+rows.length+' '+product+' • '+type+' key(s).'+(skippedCount? ' Skipped '+skippedCount+' duplicate(s).':''));
         closeDialog('bulkModal'); showToast('Added ✔'); await load(); return;
-        checkLowStock();
       }
 
       const newItems=newCodes.map(code=>({id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''}));
@@ -898,7 +889,6 @@
         state.search = '';
         closeDialog('singleModal'); showToast('Added ✔'); await load(); return;
       }
-      checkLowStock();
 
       const item={id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''};
       state.keys.unshift(item);
