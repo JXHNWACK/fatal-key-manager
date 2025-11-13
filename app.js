@@ -452,7 +452,11 @@
                 <span class="chip"><span class="dot ${dotClass}"></span>${count}</span>
               </div>`;
     }
-    function setFilter(p){ state.filterProduct=p; render(); }
+    function setFilter(p){
+      state.filterProduct=p;
+      render();
+      if (window.innerWidth <= 768) toggleSidebar(false);
+    }
 
     function visibleRows(){
       const inAssigned = state.filterProduct==='Assigned';
@@ -875,6 +879,11 @@
       if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); onUndo(); }
       if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); const s=document.getElementById('search'); if(s){ s.focus(); s.select(); } }
     });
+
+    function toggleSidebar(forceOpen){
+      document.body.classList.toggle('sidebar-open', forceOpen);
+    }
+    $('#hamburgerBtn').addEventListener('click', () => toggleSidebar(true));
 
     /* ---------- init ---------- */
     (function(){

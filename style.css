@@ -35,6 +35,8 @@
       height: 100vh;
       position: sticky;
       top: 0;
+      transition: transform .3s ease;
+      z-index: 100;
       padding: 16px;
       border-right: 1px solid rgba(255,255,255,.06);
     }
@@ -288,7 +290,28 @@
     #bulkModal textarea#bulkText{ width: 100%; box-sizing: border-box; }
 
     @media (max-width: 768px){
+      /* Mobile Sidebar (Off-canvas) */
+      .app-layout{ display: block; }
+      #sidebar{
+        position: fixed;
+        left: 0; top: 0; bottom: 0;
+        transform: translateX(-100%);
+      }
+      body.sidebar-open #sidebar{
+        transform: translateX(0);
+        box-shadow: 5px 0 25px rgba(0,0,0,.5);
+      }
+      #hamburgerBtn{
+        display: block;
+        position: fixed; top: 16px; left: 16px;
+        z-index: 99;
+        font-size: 24px; padding: 4px 12px;
+      }
+      body.sidebar-open #mobile-overlay{ display: block; }
     }
+    #hamburgerBtn{ display: none; }
+    #mobile-overlay{ display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
+
 
     @media (max-width: 540px){
       html, body{ max-width:100%; overflow-x:hidden; }
