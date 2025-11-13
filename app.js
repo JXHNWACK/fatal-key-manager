@@ -166,6 +166,16 @@
       }
     }
 
+    /* ---------- Cloud/Net status UI ---------- */
+    let LAST_SYNC_AT = null;
+    let SYNC_TOASTED = false;
+
+    function setCloudStatus(ok, msg){
+      var chip = document.getElementById('cloudChip'); if(!chip) return;
+      var dot   = chip.querySelector('.dot');
+      var label = document.getElementById('cloudLabel');
+
+      if(dot){ dot.classList.remove('ok','danger'); dot.classList.add(ok ? 'ok' : 'danger'); }
       if(ok){
         LAST_SYNC_AT = new Date();
         if(label){ label.textContent = 'Cloud • ' + LAST_SYNC_AT.toLocaleTimeString(); }
@@ -294,7 +304,7 @@
     const state={
       keys:[],
       products:[], 
-      filterProduct:'All',
+      settings: { webhookUrl: '', lowStockThreshold: 5 },      filterProduct:'All',
       filterType:'All',
       search:'', sortKey:'', sortDir:'asc'
     };
