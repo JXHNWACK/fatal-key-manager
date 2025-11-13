@@ -1026,9 +1026,6 @@
       const k=state.keys.find(x=>x.id===id); if(!k) return;
       const prev = Object.assign({}, k); pushUndo({ type:'release', payload:{ prev } });
       const patch = { status:'available', assignedTo:'', reason:'', date:'', assignedBy:'' };
-      if(CLOUD_ENABLED){ await cloudPatchById(k.id, patch); showToast('Released ✔'); await load(); return; }
-      Object.assign(k, patch); showToast('Released ✔'); save();
-
       sendDiscordNotification({
         title: '↩️ Key Released',
         description: `The key \`${prev.code}\` previously assigned to **${prev.assignedTo}** has been released and is now available.`,
@@ -1039,6 +1036,13 @@
         ],
         timestamp: new Date().toISOString()
       });
+      if(CLOUD_ENABLED){
+        await cloudPatchById(k.id, patch);
+        showToast('Released ✔');
+        await load();
+        return;
+      }
+      Object.assign(k, patch); showToast('Released ✔'); save();
     }
 
     let assignId=null;
@@ -1060,9 +1064,6 @@
         status: 'assigned',
         assignedBy: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown'
       };
-      if(CLOUD_ENABLED){ await cloudPatchById(k.id, patch); closeDialog('assignModal'); showToast('Saved ✔'); await load(); return; }
-      Object.assign(k, patch);
-
       sendDiscordNotification({
         title: '🔑 Key Assigned',
         color: 16763904, // #FFD166 (warn)
@@ -1075,6 +1076,14 @@
         ],
         timestamp: new Date().toISOString()
       });
+      if(CLOUD_ENABLED){
+        await cloudPatchById(k.id, patch);
+        closeDialog('assignModal');
+        showToast('Saved ✔');
+        await load();
+        return;
+      }
+      Object.assign(k, patch);
       closeDialog('assignModal'); showToast('Saved ✔'); save();
     }
 
@@ -1289,6 +1298,16 @@
       const skippedCount = skipped.length;
       if(skipped.length){ alert('Skipped duplicates:\n' + skipped.join('\n')); }
       if(newCodes.length===0){ closeDialog('bulkModal'); return; }
+      
+      sendDiscordNotification({
+        title: '📦 Stock Added (Bulk)',
+        description: `**${newCodes.length}** new keys were added.`,
+        color: 3092790, // A nice blue
+        fields: [
+          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true }
+        ],
+        timestamp: new Date().toISOString()
+      });
 
       if(CLOUD_ENABLED){
         const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
@@ -1309,16 +1328,6 @@
       state.filterType = type;
       state.search = '';
       showBanner('Added '+newItems.length+' '+product+' • '+type+' key(s).'+(skippedCount? ' Skipped '+skippedCount+' duplicate(s).':''));
-
-      sendDiscordNotification({
-        title: '📦 Stock Added (Bulk)',
-        description: `**${newItems.length}** new keys were added.`,
-        color: 3092790, // A nice blue
-        fields: [
-          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true }
-        ],
-        timestamp: new Date().toISOString()
-      });
       closeDialog('bulkModal'); showToast('Added ✔'); save();
     }
 
@@ -1327,6 +1336,20 @@
       const product=$('#s_product').value; const type=$('#s_type').value;
       const exists = state.keys.some(k => String(k.code||'').toLowerCase() === code.toLowerCase());
       if(exists){ alert('That code already exists and was not added.'); return; }
+      
+      sendDiscordNotification({
+        title: '➕ New Key Added',
+        color: 3092790, // A nice blue
+        fields: [
+          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true },
+          { name: 'Key', value: '`' + code + '`', inline: false }
+          { name: 'Product', value: product, inline: true },
+          { name: 'Type', value: type, inline: true },
+          { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true },
+          { name: 'Key', value: '`' + code + '`', inline: false },
+        ],
+        timestamp: new Date().toISOString()
+      });
 
       if(CLOUD_ENABLED){
         const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
@@ -1346,31 +1369,6 @@
       state.filterType = type;
       state.search = '';
       closeDialog('singleModal'); showToast('Added ✔'); save();
-
-      sendDiscordNotification({
-        title: '➕ New Key Added',
-        color: 3092790, // A nice blue
-        fields: [
-          { name: 'Product', value: product, inline: true }, { name: 'Type', value: type, inline: true }, { name: 'Added By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true },
-          { name: 'Key', value: '`' + code + '`', inline: false }
-        ],
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    function testDiscordWebhook(){
-      if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('your/webhook-url-here')) {
-        alert('Please set your real Discord Webhook URL in the index.html file first.');
-        return;
-      }
-      console.log('Sending test notification to Discord...');
-      sendDiscordNotification({
-        title: '✅ Test Successful',
-        description: 'If you can see this message, your webhook is configured correctly!',
-        color: 45001, // green
-        timestamp: new Date().toISOString()
-      }).then(() => console.log('Test notification sent.'))
-        .catch(e => console.error('Test notification failed:', e));
     }
 
     /* ---------- Expose to inline handlers ---------- */
@@ -1378,7 +1376,7 @@
     window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
     window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
     window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
-    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.testDiscordWebhook=testDiscordWebhook;
+    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
 
