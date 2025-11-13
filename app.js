@@ -176,6 +176,7 @@
       var label = document.getElementById('cloudLabel');
 
       if(dot){ dot.classList.remove('ok','danger'); dot.classList.add(ok ? 'ok' : 'danger'); }
+
       if(ok){
         LAST_SYNC_AT = new Date();
         if(label){ label.textContent = 'Cloud • ' + LAST_SYNC_AT.toLocaleTimeString(); }
@@ -303,8 +304,10 @@
     const STORAGE_KEY='fs-key-manager-v1';
     const state={
       keys:[],
-      products:[], 
-      settings: { webhookUrl: '', lowStockThreshold: 5 },      filterProduct:'All',
+      products:[],
+      settings: { webhookUrl: '', lowStockThreshold: 5 },
+      lowStockNotified: [],
+      filterProduct:'All',
       filterType:'All',
       search:'', sortKey:'', sortDir:'asc'
     };
@@ -372,9 +375,15 @@
         // Cloud mode: products are not synced, so we use localStorage as a fallback.
         try{
           const raw=localStorage.getItem(STORAGE_KEY);
-          if(raw){ 
+          if(raw){
             const localState = JSON.parse(raw);
             if (localState.settings) state.settings = { ...state.settings, ...localState.settings };
+            if (localState.lowStockNotified) state.lowStockNotified = localState.lowStockNotified;
+          }
+          if(raw){
+            const localState = JSON.parse(raw);
+            if (localState.products && localState.products.length > 0) {
+              state.products = localState.products;
           }
           if(raw){
             const localState = JSON.parse(raw);
@@ -481,6 +490,7 @@
       const k=state.keys.find(x=>x.id===id); if(!k) return;
       pushUndo({ type:'delete', payload:{ items:[ Object.assign({}, k) ] } });
       if(CLOUD_ENABLED){ await cloudDeleteById(k.id); await load(); return; }
+      checkLowStock();
       state.keys=state.keys.filter(x=>x.id!==id); save();
     }
 
@@ -503,6 +513,7 @@
         showToast('Released ✔');
         await load();
         return;
+        checkLowStock();
       }
       Object.assign(k, patch); showToast('Released ✔'); save();
     }
@@ -544,6 +555,7 @@
         showToast('Saved ✔');
         await load();
         return;
+        checkLowStock();
       }
       Object.assign(k, patch);
       closeDialog('assignModal'); showToast('Saved ✔'); save();
@@ -777,6 +789,32 @@
       showToast('Settings saved ✔');
     }
 
+    function checkLowStock(){
+      const threshold = state.settings.lowStockThreshold || 5;
+      const available = state.keys.filter(k => k.status === 'available');
+      const counts = available.reduce((acc, key) => {
+        acc[key.product] = (acc[key.product] || 0) + 1;
+        return acc;
+      }, {});
+
+      state.products.forEach(p => {
+        const count = counts[p.name] || 0;
+        const hasBeenNotified = state.lowStockNotified.includes(p.name);
+
+        if (count <= threshold && !hasBeenNotified) {
+          sendDiscordNotification({
+            title: '⚠️ Low Stock Warning!',
+            description: `There are only **${count}** available keys left for **${p.name}**.`,
+            color: 16729344, // A shade of red/orange
+            timestamp: new Date().toISOString()
+          });
+          state.lowStockNotified.push(p.name);
+        } else if (count > threshold && hasBeenNotified) {
+          state.lowStockNotified = state.lowStockNotified.filter(notifiedProduct => notifiedProduct !== p.name);
+        }
+      });
+    }
+
     async function onRefreshCloud(){
       if (CLOUD_ENABLED){
         try{ SYNC_TOASTED = false; await load(); }
@@ -822,6 +860,7 @@
         state.search = '';
         showBanner('Added '+rows.length+' '+product+' • '+type+' key(s).'+(skippedCount? ' Skipped '+skippedCount+' duplicate(s).':''));
         closeDialog('bulkModal'); showToast('Added ✔'); await load(); return;
+        checkLowStock();
       }
 
       const newItems=newCodes.map(code=>({id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''}));
@@ -859,6 +898,7 @@
         state.search = '';
         closeDialog('singleModal'); showToast('Added ✔'); await load(); return;
       }
+      checkLowStock();
 
       const item={id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''};
       state.keys.unshift(item);
@@ -877,7 +917,8 @@
     window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit; window.openSettings=openSettings; window.saveSettings=saveSettings;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
-    function toggleManageMenu(){ 
+
+    function toggleManageMenu(){
       var m = document.getElementById('manageMenu'); if(!m) return;
       var isOpen = m.style.display === 'block'; m.style.display = isOpen ? 'none' : 'block';
     }
