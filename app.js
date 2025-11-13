@@ -160,17 +160,11 @@
           embeds: [embed]
         })
       });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Discord notification failed: ${response.status} ${errorText}`);
+      }
     }
-    /* ---------- Cloud/Net status UI ---------- */
-    let LAST_SYNC_AT = null;
-    let SYNC_TOASTED = false;
-
-    function setCloudStatus(ok, msg){
-      var chip = document.getElementById('cloudChip'); if(!chip) return;
-      var dot   = chip.querySelector('.dot');
-      var label = document.getElementById('cloudLabel');
-
-      if(dot){ dot.classList.remove('ok','danger'); dot.classList.add(ok ? 'ok' : 'danger'); }
 
       if(ok){
         LAST_SYNC_AT = new Date();
@@ -368,7 +362,7 @@
         // Cloud mode: products are not synced, so we use localStorage as a fallback.
         try{
           const raw=localStorage.getItem(STORAGE_KEY);
-          if(raw){
+          if(raw){ 
             const localState = JSON.parse(raw);
             if (localState.settings) state.settings = { ...state.settings, ...localState.settings };
           }
@@ -873,7 +867,7 @@
     window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit; window.openSettings=openSettings; window.saveSettings=saveSettings;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
-    function toggleManageMenu(){
+    function toggleManageMenu(){ 
       var m = document.getElementById('manageMenu'); if(!m) return;
       var isOpen = m.style.display === 'block'; m.style.display = isOpen ? 'none' : 'block';
     }
