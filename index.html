@@ -95,6 +95,7 @@
         <div id="manageMenu" class="dropdown" role="menu" aria-label="Manage actions">
           <button type="button" class="item" onclick="onNewSingle()">➕ New Single</button>
           <div class="divider"></div>
+          <button type="button" class="item" onclick="openSettings()">⚙️ Settings</button>
           <button type="button" class="item" onclick="openProductManager()">📦 Manage Products</button>
           <button type="button" class="item" onclick="onExportCSV()">⬇️ Export CSV</button>
           <button type="button" class="item" onclick="onBackupJSON()">💾 Backup JSON</button>
@@ -221,6 +222,30 @@
       <div class="modal-footer">
         <button type="button" onclick="closeDialog('editProductModal')">Cancel</button>
         <button type="button" class="btn-primary" onclick="onSaveProductEdit()">Save Changes</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings Modal -->
+  <dialog id="settingsModal">
+    <form method="dialog">
+      <div class="modal-header">
+        <strong>Settings</strong>
+        <button type="button" onclick="closeDialog('settingsModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Discord Webhook URL</label>
+          <input id="settingWebhookUrl" type="text" placeholder="Paste your webhook URL here">
+        </div>
+        <div class="field">
+          <label>Low Stock Threshold</label>
+          <input id="settingLowStock" type="number" value="5" min="0">
+          <p class="help" style="margin-top:4px;">Send a Discord alert when a product has this many available keys or fewer.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" onclick="saveSettings()">Save Settings</button>
       </div>
     </form>
   </dialog>
