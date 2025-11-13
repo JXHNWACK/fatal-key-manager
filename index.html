@@ -11,101 +11,108 @@
   <div id="banner" aria-live="polite"></div>
   <div id="toast" aria-live="polite"></div>
 
-  <!-- Welcome/login overlay -->
-  <div id="welcomeScreen" aria-modal="true" role="dialog">
-    <div class="welcome-card">
-      <div class="welcome-greeting" aria-hidden="true" style="display:none; opacity:0;"></div>
-      <img src="./fs_logo_emoji.png" alt="Rogue Community Logo">
-      <div id="loginProgress" class="login-progress" aria-hidden="true"><div class="bar"></div></div>
-      <h1>Rogue Community</h1>
-      <p>Key Manager — Login</p>
-      <form class="welcome-form" onsubmit="return attemptLogin(event)">
-        <select id="loginPick" onchange="pickPresetUser(this.value)" style="display:none;">
-          <option value="Administrator" selected>Administrator</option>
-        </select>
-        <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
-        <div class="welcome-actions">
-          <button id="loginGo" type="submit" class="btn-primary" disabled>Continue</button>
-        </div>
-        <div id="loginRotator" class="welcome-rotate" aria-live="polite"></div>
-        <div id="welcomeError" class="welcome-error">Incorrect username or password.</div>
-      </form>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="header">
-      <div class="logo" aria-label="Rogue Community logo"></div>
-      <div class="title">
-        <h1>Rogue Community — Key Manager</h1>
-        <p>A tool for staff to track and distribute keys provided by Rogue Community.</p>
+  <div class="app-layout">
+    <!-- Welcome/login overlay -->
+    <div id="welcomeScreen" aria-modal="true" role="dialog">
+      <div class="welcome-card">
+        <div class="welcome-greeting" aria-hidden="true" style="display:none; opacity:0;"></div>
+        <img src="./fs_logo_emoji.png" alt="Rogue Community Logo">
+        <div id="loginProgress" class="login-progress" aria-hidden="true"><div class="bar"></div></div>
+        <h1>Rogue Community</h1>
+        <p>Key Manager — Login</p>
+        <form class="welcome-form" onsubmit="return attemptLogin(event)">
+          <select id="loginPick" onchange="pickPresetUser(this.value)" style="display:none;">
+            <option value="Administrator" selected>Administrator</option>
+          </select>
+          <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+          <div class="welcome-actions">
+            <button id="loginGo" type="submit" class="btn-primary" disabled>Continue</button>
+          </div>
+          <div id="loginRotator" class="welcome-rotate" aria-live="polite"></div>
+          <div id="welcomeError" class="welcome-error">Incorrect username or password.</div>
+        </form>
       </div>
-      <div class="right">
-        <span id="netChip" class="chip"><span class="dot danger"></span><span id="netText">Offline</span></span>
-        <span id="cloudChip" class="chip" title="Cloud status"><span class="dot danger"></span><span id="cloudLabel">Cloud</span></span>
+    </div>
 
-        <div class="user-menu" id="userMenu">
-          <button onclick="toggleUserDropdown()" class="btn-ghost" id="userBtn">User ▾</button>
-          <div id="userDropdown" class="dropdown">
-            <button onclick="logout()">Logout</button>
+    <nav id="sidebar">
+      <!-- Sidebar content will be rendered by JS -->
+    </nav>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="header">
+          <div class="logo" aria-label="Rogue Community logo"></div>
+          <div class="title">
+            <h1>Rogue Community — Key Manager</h1>
+            <p>A tool for staff to track and distribute keys provided by Rogue Community.</p>
+          </div>
+          <div class="right">
+            <span id="netChip" class="chip"><span class="dot danger"></span><span id="netText">Offline</span></span>
+            <span id="cloudChip" class="chip" title="Cloud status"><span class="dot danger"></span><span id="cloudLabel">Cloud</span></span>
+
+            <div class="user-menu" id="userMenu">
+              <button onclick="toggleUserDropdown()" class="btn-ghost" id="userBtn">User ▾</button>
+              <div id="userDropdown" class="dropdown">
+                <button onclick="logout()">Logout</button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="help">
-      <details>
-        <summary><strong>Quick start</strong> — Click here to expand to show you how to import the keys.</summary>
-        <ol>
-          <li>Click <strong>Bulk Add</strong> → choose product → paste one key per line → <strong>Add</strong>.</li>
-          <li>Use the tabs to filter by product. Search by code or user.</li>
-          <li>Click <strong>Assign</strong> on a key to set Discord user, reason, and date (defaults to today).</li>
-          <li>Use <strong>Export CSV</strong> for records and <strong>Backup JSON</strong>/<strong>Restore JSON</strong> to move devices.</li>
-        </ol>
-      </details>
-    </div>
+        <div class="help">
+          <details>
+            <summary><strong>Quick start</strong> — Click here to expand to show you how to import the keys.</summary>
+            <ol>
+              <li>Click <strong>Bulk Add</strong> → choose product → paste one key per line → <strong>Add</strong>.</li>
+              <li>Use the sidebar to filter by product. Search by code or user.</li>
+              <li>Click <strong>Assign</strong> on a key to set Discord user, reason, and date (defaults to today).</li>
+              <li>Use <strong>Export CSV</strong> for records and <strong>Backup JSON</strong>/<strong>Restore JSON</strong> to move devices.</li>
+            </ol>
+          </details>
+        </div>
 
-    <div class="tabs" id="tabs"></div>
-    <div id="statsBar" class="stats" aria-live="polite"></div>
+        <div id="statsBar" class="stats" aria-live="polite"></div>
 
-    <div class="toolbar">
-      <div class="group search">
-        <input id="search" type="text" placeholder="Search keys, users, reason… (⌘/Ctrl + K)" style="flex:1" oninput="onSearchInput(this.value)" />
-        <select id="typeFilter" onchange="onTypeFilter(this.value)" title="Filter by key type">
-          <option value="All">All Types</option>
-          <option value="Day">Day</option>
-          <option value="Week">Week</option>
-          <option value="Month">Month</option>
-          <option value="Lifetime">Lifetime</option>
-        </select>
-        <div class="action-grid">
-          <div class="left-stack">
-            <button type="button" class="btn-ghost" onclick="onClearSearch()" title="Clear search">🧹 Clear</button>
-            <button type="button" class="btn-ghost" id="undoBtn" onclick="onUndo()" title="Undo last action" disabled>↩️ Undo</button>
+        <div class="toolbar">
+          <div class="group search">
+            <input id="search" type="text" placeholder="Search keys, users, reason… (⌘/Ctrl + K)" style="flex:1" oninput="onSearchInput(this.value)" />
+            <select id="typeFilter" onchange="onTypeFilter(this.value)" title="Filter by key type">
+              <option value="All">All Types</option>
+              <option value="Day">Day</option>
+              <option value="Week">Week</option>
+              <option value="Month">Month</option>
+              <option value="Lifetime">Lifetime</option>
+            </select>
+            <div class="action-grid">
+              <div class="left-stack">
+                <button type="button" class="btn-ghost" onclick="onClearSearch()" title="Clear search">🧹 Clear</button>
+                <button type="button" class="btn-ghost" id="undoBtn" onclick="onUndo()" title="Undo last action" disabled>↩️ Undo</button>
+              </div>
+              <div class="right-row">
+                <button type="button" class="btn-ghost" onclick="onRefreshCloud()" title="Force re-fetch from cloud">🔄 Refresh</button>
+                <button type="button" class="btn-primary" onclick="onBulkAdd()" title="Add many keys quickly">📥 Bulk Add</button>
+              </div>
+            </div>
           </div>
-          <div class="right-row">
-            <button type="button" class="btn-ghost" onclick="onRefreshCloud()" title="Force re-fetch from cloud">🔄 Refresh</button>
-            <button type="button" class="btn-primary" onclick="onBulkAdd()" title="Add many keys quickly">📥 Bulk Add</button>
+          <div class="group menu-wrap">
+            <button type="button" class="btn-ghost" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙 / ☀️</button>
+            <button type="button" class="btn-primary" onclick="toggleManageMenu()" aria-haspopup="true" aria-expanded="false">Manage ▾</button>
+            <div id="manageMenu" class="dropdown" role="menu" aria-label="Manage actions">
+              <button type="button" class="item" onclick="onNewSingle()">➕ New Single</button>
+              <div class="divider"></div>
+              <button type="button" class="item" onclick="openProductManager()">📦 Manage Products</button>
+              <button type="button" class="item" onclick="onExportCSV()">⬇️ Export CSV</button>
+              <button type="button" class="item" onclick="onBackupJSON()">💾 Backup JSON</button>
+              <label for="restoreJSON" class="item">⤴️ Import JSON to Cloud
+                <input id="restoreJSON" type="file" accept="application/json" onchange="onImportJSON(this.files && this.files[0])">
+              </label>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="group menu-wrap">
-        <button type="button" class="btn-ghost" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙 / ☀️</button>
-        <button type="button" class="btn-primary" onclick="toggleManageMenu()" aria-haspopup="true" aria-expanded="false">Manage ▾</button>
-        <div id="manageMenu" class="dropdown" role="menu" aria-label="Manage actions">
-          <button type="button" class="item" onclick="onNewSingle()">➕ New Single</button>
-          <div class="divider"></div>
-          <button type="button" class="item" onclick="openProductManager()">📦 Manage Products</button>
-          <button type="button" class="item" onclick="onExportCSV()">⬇️ Export CSV</button>
-          <button type="button" class="item" onclick="onBackupJSON()">💾 Backup JSON</button>
-          <label for="restoreJSON" class="item">⤴️ Import JSON to Cloud
-            <input id="restoreJSON" type="file" accept="application/json" onchange="onImportJSON(this.files && this.files[0])">
-          </label>
-        </div>
-      </div>
-    </div>
 
-    <div id="tableWrap"></div>
+        <div id="tableWrap"></div>
+      </div>
+    </main>
   </div>
 
   <!-- Assign Modal -->

@@ -414,44 +414,45 @@
     }
 
     /* ---------- Tabs & filtering ---------- */
-    function renderTabs(){
+    function renderSidebarNav(){
       const available = state.keys.filter(k=>k.status==='available');
       const byProd = available.reduce((a,k)=>{ a[k.product]=(a[k.product]||0)+1; return a; },{});
       const allCount = available.length;
       const assignedCount = state.keys.filter(k=>k.status==='assigned' || k.status==='expired').length;
       
+      const sidebar = $('#sidebar');
+      if (!sidebar) return;
+
+      const header = `<div class="sidebar-header"><div class="logo"></div><h2>Products</h2></div>`;
+      const nav = document.createElement('div');
+      nav.className = 'sidebar-nav';
+
       const productTabs = state.products.map(p => p.name);
-      const tabs = ['All', ...productTabs, 'Assigned'].map(p=>{
+      const navItems = ['All', ...productTabs, 'Assigned'].map(p=>{
         let c=0, dot='ok';
         if(p==='All') c = allCount;
         else if(p==='Assigned'){ c = assignedCount; dot='warn'; }
         else c = (byProd[p]||0);
-        return '<div class="tab '+(state.filterProduct===p?'active':'')+'" onclick="setFilter(\''+p+'\')">'+
-                 p+' <span class="chip"><span class="dot '+dot+'"></span>'+c+'</span></div>';
+        if (p === 'Assigned' && nav.innerHTML) return '<div class="nav-divider"></div>' + createNavItem(p, c, dot);
+        return createNavItem(p, c, dot);
       }).join('');
-      $('#tabs').innerHTML = tabs;
+      nav.innerHTML = navItems;
+      sidebar.innerHTML = header;
+      sidebar.appendChild(nav);
 
       const productOptions = state.products.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
       const bulkSelect = document.getElementById('bulkProduct');
       const singleSelect = document.getElementById('s_product');
       if (bulkSelect) bulkSelect.innerHTML = productOptions;
       if (singleSelect) singleSelect.innerHTML = productOptions;
-
-      if(!document.getElementById('tabUnderline')){
-        const ul=document.createElement('div');
-        ul.id='tabUnderline'; ul.className='tab-underline';
-        document.getElementById('tabs').appendChild(ul);
-      }
-      moveTabUnderline();
     }
-    function setFilter(p){ state.filterProduct=p; render(); moveTabUnderline(); }
-    function moveTabUnderline(){
-      var tabsEl=document.getElementById('tabs'); var underline=document.getElementById('tabUnderline');
-      if(!tabsEl || !underline) return;
-      var active=tabsEl.querySelector('.tab.active');
-      if(active){ underline.style.width=active.offsetWidth+'px'; underline.style.transform='translateX('+active.offsetLeft+'px)'; underline.style.opacity='1'; }
-      else{ underline.style.width='0'; underline.style.opacity='0'; }
+    function createNavItem(p, count, dotClass){
+      return `<div class="nav-item ${state.filterProduct === p ? 'active' : ''}" onclick="setFilter('${escapeHtml(p)}')">
+                <span>${escapeHtml(p)}</span>
+                <span class="chip"><span class="dot ${dotClass}"></span>${count}</span>
+              </div>`;
     }
+    function setFilter(p){ state.filterProduct=p; render(); }
 
     function visibleRows(){
       const inAssigned = state.filterProduct==='Assigned';
@@ -652,11 +653,11 @@
           + '<td>'+highlight(k.reason||'')+'</td>'
           + '<td>'+(k.date||'')+'</td>'
           + '<td class="actions">'
-            + '<button type="button" onclick="copyCode(\''+k.id+'\')">Copy</button>'
+            + '<button type="button" class="action-secondary" onclick="copyCode(\''+k.id+'\')">Copy</button>'
             + (assignedish
-              ? '<button type="button" onclick="openAssign(\''+k.id+'\')">Edit</button><button type="button" onclick="releaseKey(\''+k.id+'\')">Release</button>'
+              ? '<button type="button" class="action-secondary" onclick="openAssign(\''+k.id+'\')">Edit</button><button type="button" onclick="releaseKey(\''+k.id+'\')">Release</button>'
               : '<button type="button" class="btn-primary" onclick="openAssign(\''+k.id+'\')">Assign</button>')
-            + '<button type="button" onclick="removeKey(\''+k.id+'\')" style="border-color: rgba(239,71,111,.5);">Delete</button>'
+            + '<button type="button" class="action-secondary" onclick="removeKey(\''+k.id+'\')" style="border-color: rgba(239,71,111,.5);">Delete</button>'
           + '</td></tr>';
       }).join('');
       $('#tableWrap').innerHTML='<table>'+head+'<tbody>'+body+'</tbody></table>';
@@ -691,7 +692,7 @@
     }
 
     function render(){
-      renderTabs(); renderTable(); renderStats();
+      renderSidebarNav(); renderTable(); renderStats();
       var inp = document.getElementById('search'); if(inp && inp.value !== state.search){ inp.value = state.search; }
       var tf = document.getElementById('typeFilter'); if(tf && tf.value !== state.filterType){ tf.value = state.filterType; }
     }
