@@ -357,7 +357,7 @@
       tbody td:nth-child(7)::before{ content:"Date";    color:var(--muted); font-size:12px; }
 
       tbody td:last-child{ padding-top:10px; gap:8px; flex-wrap:wrap; }
-      .actions{ gap:8px; }
+      .actions{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
       .actions button{ flex:1 1 48%; padding:8px 10px; font-size:13px; }
       .actions .btn-primary{ flex:1 1 100%; }
 
