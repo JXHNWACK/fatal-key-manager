@@ -178,15 +178,22 @@
       -webkit-backdrop-filter: blur(12px);
       border:1px solid rgba(255,255,255,.1); border-radius:20px; box-shadow:var(--shadow);
       padding:28px; text-align:center;
+      perspective: 1000px;
     }
-    .welcome-card img{ width:84px; height:84px; border-radius:12px; margin-bottom:12px; box-shadow:0 0 22px rgba(105,207,218,.35); }
+    .welcome-card img{
+      width:84px; height:84px; border-radius:12px; margin-bottom:12px; box-shadow:0 0 22px rgba(105,207,218,.35);
+      transition: transform 0.2s ease-out;
+    }
+    .welcome-card img:hover{ transform: scale(1.05) translateZ(20px) rotateY(10deg); }
     .welcome-card h1{ margin:0; font-size:22px; color:var(--accent); letter-spacing:.4px; }
     .welcome-card p{ margin:6px 0 16px; color:var(--muted); }
     .welcome-form{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
     .welcome-form input, .welcome-form select{
       background:rgba(0,0,0,.2); color:var(--text); border:1px solid rgba(255,255,255,.15);
       border-radius:10px; padding:10px 12px; font-size:14px;
+      transition: border-color .2s ease, box-shadow .2s ease;
     }
+    .welcome-form input:focus{ border-color: var(--accent); box-shadow: 0 0 12px rgba(244,113,116,.35); outline:none; }
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
     .login-options {
