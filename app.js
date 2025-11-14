@@ -209,7 +209,7 @@
     }
 
     var __rotTimer = null;
-    var __rotMsgs = [ 'Welcome to Rogue Community','Securely manage your keys','Staff access only' ];
+    var __rotMsgs = [ 'Happy Holidays from Rogue Community!','Spreading some holiday cheer...','Time to manage some keys, ho ho ho!' ];
     var __rotIdx = 0;
     function startLoginRotator(){
       var el = document.getElementById('loginRotator'); if(!el) return;
