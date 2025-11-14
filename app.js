@@ -333,7 +333,7 @@
       products:[],
       filterProduct:'All',
       filterType:'All',
-      search:'', sortKey:'', sortDir:'asc'
+      search:'', sortKey:'', sortDir:'asc',
     };
 
     function applyTheme(){
@@ -780,7 +780,6 @@
 
     function render(){
       renderSidebarNav(); renderTable(); renderStats();
-      renderStats();
       var inp = document.getElementById('search'); if(inp && inp.value !== state.search){ inp.value = state.search; }
       var tf = document.getElementById('typeFilter'); if(tf && tf.value !== state.filterType){ tf.value = state.filterType; }
     }
