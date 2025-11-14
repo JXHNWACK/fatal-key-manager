@@ -120,6 +120,16 @@
     td:first-child{border-top-left-radius:12px; border-bottom-left-radius:12px}
     td:last-child{border-top-right-radius:12px; border-bottom-right-radius:12px}
 
+    /* --- Table Action Buttons --- */
+    td.actions{ text-align: right; }
+    .actions button{ opacity: 0; transform: scale(0.9); transition: opacity .15s ease, transform .15s ease; pointer-events: none; }
+    tbody tr:hover .actions button{ opacity: 1; transform: scale(1); pointer-events: auto; }
+    /* Always show the primary action button to guide the user */
+    .actions .btn-primary{ opacity: 1; transform: scale(1); pointer-events: auto; }
+    /* Stagger the animation for a nice effect */
+    tbody tr:hover .actions button:nth-child(2){ transition-delay: .05s; }
+    tbody tr:hover .actions button:nth-child(3){ transition-delay: .1s; }
+
     .empty{padding:24px; text-align:center; color:var(--muted); border:1px dashed rgba(255,255,255,.15); border-radius:12px; background:rgba(255,255,255,.02)}
 
     dialog{border:none; border-radius:16px; padding:0; background:var(--panel); color:var(--text); box-shadow:var(--shadow); width:min(520px, 92vw)}
@@ -156,8 +166,10 @@
 
     /* Welcome/login overlay */
     #welcomeScreen{
-      position:fixed; inset:0; background:var(--bg);
+      position:fixed; inset:0;
       display:flex; align-items:center; justify-content:center; z-index:9999;
+      background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, var(--accent-2));
+      background-size: 400% 400%; animation: gradientBG 15s ease infinite;
     }
     .welcome-card{
       width:min(520px, 92vw); background:var(--panel); 
@@ -174,6 +186,23 @@
     }
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
+    .login-options {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .login-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .login-options input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
 
     .welcome-greeting{
       font-size: 28px; font-weight: 800; letter-spacing: 4px; color: var(--text);
@@ -194,8 +223,12 @@
     .welcome-card .login-progress{ display:none; height:6px; margin:6px 0 2px; border-radius:999px; overflow:hidden; background: var(--panel-2); border:1px solid rgba(255,255,255,.08); }
     .welcome-card .login-progress .bar{ height:100%; width:0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); animation: progress-run 3.6s ease-in-out forwards; }
     @keyframes progress-run{ from{ width:0% } to{ width:100% } }
-
     .welcome-card.shake{ animation: shake .4s ease; }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
     @keyframes shake{ 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-6px); } 40%{ transform:translateX(6px); } 60%{ transform:translateX(-4px); } 80%{ transform:translateX(4px); } }
 
     .user-menu{position:relative; display:none; margin-left:12px;}
@@ -203,6 +236,10 @@
       display:none; position:absolute; right:0; top:110%;
       background:var(--panel); border:1px solid rgba(255,255,255,.1);
       border-radius:10px; box-shadow:var(--shadow); min-width:140px; z-index:10000;
+    }
+    .user-menu .dropdown, .toolbar .dropdown {
+      transform-origin: top right;
+      transition: transform .15s ease, opacity .15s ease;
     }
     .user-menu .dropdown button{
       width:100%; text-align:left; background:transparent; border:none; color:var(--text); padding:10px; cursor:pointer;

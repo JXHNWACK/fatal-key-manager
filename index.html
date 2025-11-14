@@ -24,9 +24,15 @@
           <select id="loginPick" onchange="pickPresetUser(this.value)" style="display:none;">
             <option value="Administrator" selected>Administrator</option>
           </select>
-          <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+          <div class="password-wrapper">
+            <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+            <button type="button" id="passToggle" aria-label="Show password">👁️</button>
+          </div>
           <div class="welcome-actions">
             <button id="loginGo" type="submit" class="btn-primary" disabled>Continue</button>
+          </div>
+          <div class="login-options">
+            <label><input type="checkbox" id="rememberMe"> Remember me</label>
           </div>
           <div id="loginRotator" class="welcome-rotate" aria-live="polite"></div>
           <div id="welcomeError" class="welcome-error">Incorrect username or password.</div>

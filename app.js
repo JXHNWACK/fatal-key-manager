@@ -251,7 +251,9 @@
         setTimeout(function(){
           if(el) el.style.display = 'none';
           window.scrollTo(0,0); document.documentElement.scrollLeft = 0; document.body.scrollLeft = 0;
-          try{ sessionStorage.setItem('fs_authed','1'); sessionStorage.setItem('fs_user', u || 'User'); }catch(e){}
+          const remember = document.getElementById('rememberMe')?.checked;
+          const storage = remember ? localStorage : sessionStorage;
+          try{ storage.setItem('fs_authed','1'); storage.setItem('fs_user', u || 'User'); }catch(e){}
           var menu=document.getElementById('userMenu'); var btnU=document.getElementById('userBtn');
           if(menu) menu.style.display='inline-block';
           if(btnU) btnU.textContent = (u || 'User') + ' ▾';
@@ -271,11 +273,22 @@
       document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
       toggleLoginButton();
 
+      $('#passToggle')?.addEventListener('click', function(){
+        const passInput = $('#loginPass');
+        const isPass = passInput.type === 'password';
+        passInput.type = isPass ? 'text' : 'password';
+        this.textContent = isPass ? '🙈' : '👁️';
+        this.setAttribute('aria-label', isPass ? 'Hide password' : 'Show password');
+      });
+
       try{
-        if(sessionStorage.getItem('fs_authed') === '1'){
+        const authed = localStorage.getItem('fs_authed') === '1' || sessionStorage.getItem('fs_authed') === '1';
+        if(authed){
           var el=document.getElementById('welcomeScreen'); if(el) el.style.display='none';
-          var u=sessionStorage.getItem('fs_user')||'User'; applyUserAccent(u);
+          const storage = localStorage.getItem('fs_authed') === '1' ? localStorage : sessionStorage;
+          var u=storage.getItem('fs_user')||'User'; applyUserAccent(u);
           var menu=document.getElementById('userMenu'); var btn=document.getElementById('userBtn');
+          if(u) sessionStorage.setItem('fs_user', u); // Ensure session has user for discord notifications
           if(menu) menu.style.display='inline-block'; if(btn) btn.textContent = u + ' ▾';
         }
       }catch(e){}
@@ -296,7 +309,10 @@
       if(dd) dd.style.display = (dd.style.display==='block'?'none':'block');
     }
     function logout(){
-      try{ sessionStorage.removeItem('fs_authed'); sessionStorage.removeItem('fs_user'); }catch(e){}
+      try{
+        sessionStorage.removeItem('fs_authed'); sessionStorage.removeItem('fs_user');
+        localStorage.removeItem('fs_authed'); localStorage.removeItem('fs_user');
+      }catch(e){}
       location.reload();
     }
 
