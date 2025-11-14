@@ -53,7 +53,7 @@
         const sample = rows && rows[0] ? rows[0] : null;
         if(!sample){ return true; }
         const have = Object.keys(sample);
-        const missing = EXPECTED_COLS.filter(k => !have.includes(k));
+        const missing = expected.filter(k => !have.includes(k));
         if(missing.length){
           const msg = `Your Google Sheet tab "${sheetName}" is missing header(s): ${missing.join(', ')}. This may be due to a recent update. Please add the missing headers to fix.\n` +
                       `Add these EXACT headers in row 1: ${expected.join(', ')} — then try again.`;
