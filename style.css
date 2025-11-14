@@ -172,8 +172,11 @@
       background-size: 400% 400%; animation: gradientBG 15s ease infinite;
     }
     .welcome-card{
-      width:min(520px, 92vw); background:var(--panel); 
-      border:1px solid rgba(255,255,255,.06); border-radius:20px; box-shadow:var(--shadow);
+      width:min(520px, 92vw);
+      background: rgba(25, 25, 40, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border:1px solid rgba(255,255,255,.1); border-radius:20px; box-shadow:var(--shadow);
       padding:28px; text-align:center;
     }
     .welcome-card img{ width:84px; height:84px; border-radius:12px; margin-bottom:12px; box-shadow:0 0 22px rgba(105,207,218,.35); }
@@ -181,7 +184,7 @@
     .welcome-card p{ margin:6px 0 16px; color:var(--muted); }
     .welcome-form{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
     .welcome-form input, .welcome-form select{
-      background:var(--panel-2); color:var(--text); border:1px solid rgba(255,255,255,.1);
+      background:rgba(0,0,0,.2); color:var(--text); border:1px solid rgba(255,255,255,.15);
       border-radius:10px; padding:10px 12px; font-size:14px;
     }
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
