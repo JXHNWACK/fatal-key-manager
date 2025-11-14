@@ -82,7 +82,7 @@
 
         <div id="statsBar" class="stats" aria-live="polite"></div>
 
-        <div id="requestsWrap" style="display:none;"></div>
+        
 
         <div class="toolbar">
           <div class="group search">
@@ -110,7 +110,6 @@
             <button type="button" class="btn-primary" onclick="toggleManageMenu()" aria-haspopup="true" aria-expanded="false">Manage ▾</button>
             <div id="manageMenu" class="dropdown" role="menu" aria-label="Manage actions">
               <button type="button" class="item" onclick="onNewSingle()">➕ New Single</button>
-              <button type="button" class="item" onclick="openRequestModal()">🙋 Request a Key</button>
               <div class="divider"></div>
               <button type="button" class="item" onclick="openProductManager()">📦 Manage Products</button>
               <button type="button" class="item" onclick="onExportCSV()">⬇️ Export CSV</button>
@@ -256,43 +255,6 @@
         <div id="historyList"></div>
       </div>
       <div class="modal-footer"><button type="button" onclick="closeDialog('historyModal')">Close</button></div>
-    </form>
-  </dialog>
-
-  <!-- Request Key Modal -->
-  <dialog id="requestModal">
-    <form method="dialog">
-      <div class="modal-header">
-        <strong>Request a Key</strong>
-        <button type="button" onclick="closeDialog('requestModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="field"><label>Product</label><select id="req_product"></select></div>
-        <div class="field"><label>Reason for Request</label><input id="req_reason" type="text" placeholder="e.g. Weekly giveaway, testing" required></div>
-        <p style="font-size:12px; color:var(--muted); margin-top:16px;">Your request will be submitted to an administrator for approval. You will be notified on Discord if it is approved or denied.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" onclick="closeDialog('requestModal')">Cancel</button>
-        <button type="button" class="btn-primary" onclick="submitKeyRequest()">Submit Request</button>
-      </div>
-    </form>
-  </dialog>
-
-  <!-- Approve Request Modal -->
-  <dialog id="approveModal">
-    <form method="dialog">
-      <div class="modal-header">
-        <strong>Approve Request</strong>
-        <button type="button" onclick="closeDialog('approveModal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="approve_requestId">
-        <div class="field"><label>Select an available key to assign:</label><select id="approve_keyId"></select></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" onclick="closeDialog('approveModal')">Cancel</button>
-        <button type="button" class="btn-primary" onclick="confirmApproval()">Approve & Assign</button>
-      </div>
     </form>
   </dialog>
 
