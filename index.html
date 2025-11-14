@@ -82,8 +82,6 @@
 
         <div id="statsBar" class="stats" aria-live="polite"></div>
 
-        
-
         <div class="toolbar">
           <div class="group search">
             <input id="search" type="text" placeholder="Search keys, users, reason… (⌘/Ctrl + K)" style="flex:1" oninput="onSearchInput(this.value)" />
@@ -110,7 +108,6 @@
             <button type="button" class="btn-primary" onclick="toggleManageMenu()" aria-haspopup="true" aria-expanded="false">Manage ▾</button>
             <div id="manageMenu" class="dropdown" role="menu" aria-label="Manage actions">
               <button type="button" class="item" onclick="onNewSingle()">➕ New Single</button>
-              <div class="divider"></div>
               <button type="button" class="item" onclick="openProductManager()">📦 Manage Products</button>
               <button type="button" class="item" onclick="onExportCSV()">⬇️ Export CSV</button>
               <button type="button" class="item" onclick="onBackupJSON()">💾 Backup JSON</button>

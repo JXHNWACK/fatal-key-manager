@@ -333,7 +333,7 @@
       products:[],
       filterProduct:'All',
       filterType:'All',
-      search:'', sortKey:'', sortDir:'asc',
+      search:'', sortKey:'', sortDir:'asc'
     };
 
     function applyTheme(){
@@ -948,7 +948,6 @@
     /* ---------- Expose to inline handlers ---------- */
     window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign; window.openHistory=openHistory;
     window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
-    window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
     window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
     window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
