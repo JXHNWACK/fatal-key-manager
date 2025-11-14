@@ -40,20 +40,23 @@
 
     /* ======== SteinHQ v2 Cloud (resilient) ======== */
     const STEIN_BASE    = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
-    const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
+    const STEIN_SHEET_KEYS   = 'Keys';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
+    const STEIN_SHEET_REQUESTS = 'Requests';   // <— IMPORTANT: Create a new sheet tab with this name
     const STEIN_TOKEN   = '';             // add X-Auth-Token if private
     const CLOUD_ENABLED = true;
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW'; // <— PASTE YOUR DISCORD WEBHOOK URL HERE
-    const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy','history'];
-    function validateColumns(rows){
+    const EXPECTED_COLS_KEYS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy','history'];
+    const EXPECTED_COLS_REQUESTS = ['id','requester','product','reason','status','requestedAt','processedAt','processedBy'];
+
+    function validateColumns(rows, sheetName, expected){
       try{
         const sample = rows && rows[0] ? rows[0] : null;
         if(!sample){ return true; }
         const have = Object.keys(sample);
         const missing = EXPECTED_COLS.filter(k => !have.includes(k));
         if(missing.length){
-          const msg = 'Your Google Sheet tab "'+STEIN_SHEET+'" is missing header(s): '+missing.join(', ')+'. This may be due to a recent update. Please add the missing headers to fix.\n' +
-                      'Add these EXACT headers in row 1 (A1..I1): '+EXPECTED_COLS.join(', ')+' — then try again.';
+          const msg = `Your Google Sheet tab "${sheetName}" is missing header(s): ${missing.join(', ')}. This may be due to a recent update. Please add the missing headers to fix.\n` +
+                      `Add these EXACT headers in row 1: ${expected.join(', ')} — then try again.`;
           console.warn('[RC Key Manager] Missing headers:', missing);
           showBanner(msg);
           return false;
@@ -77,8 +80,8 @@
       throw lastErr;
     }
 
-    async function ensureSheet(){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+    async function ensureSheet(sheetName){
+      const url = `${STEIN_BASE}/${encodeURIComponent(sheetName)}`;
       try{ await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify([]) }); }catch(e){}
     }
 
@@ -102,13 +105,13 @@
       };
     }
 
-    async function cloudGetAll(){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+    async function cloudGetAll(sheetName){
+      const url = `${STEIN_BASE}/${encodeURIComponent(sheetName)}`;
       const exec = async () => {
         const r = await fetch(url, { method:'GET', headers: steinHeaders(), cache:'no-store' });
         if(!r.ok){
           const msg = await r.text().catch(()=>r.statusText);
-          if (r.status === 404){ await ensureSheet(); throw new Error('Sheet missing (bootstrap attempted). Reload and try again.'); }
+          if (r.status === 404){ await ensureSheet(sheetName); throw new Error(`Sheet "${sheetName}" missing (bootstrap attempted). Reload and try again.`); }
           throw new Error(`Cloud fetch failed: ${msg}`);
         }
         return await r.json();
@@ -118,14 +121,14 @@
       return rows;
     }
 
-    async function cloudAppend(rows){
+    async function cloudAppend(sheetName, rows){
       if(!rows || !rows.length) return;
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+      const url = `${STEIN_BASE}/${encodeURIComponent(sheetName)}`;
       const exec = async () => {
         const r = await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify(rows) });
         if(!r.ok){
           const msg = await r.text().catch(()=>r.statusText);
-          if (r.status === 404){ await ensureSheet(); throw new Error('Sheet missing (bootstrap attempted). Try again.'); }
+          if (r.status === 404){ await ensureSheet(sheetName); throw new Error(`Sheet "${sheetName}" missing (bootstrap attempted). Try again.`); }
           throw new Error(`Cloud append failed: ${msg}`);
         }
       };
@@ -133,8 +136,8 @@
       setCloudStatus(true);
     }
 
-    async function cloudPatchById(id, patch){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+    async function cloudPatchById(sheetName, id, patch){
+      const url = `${STEIN_BASE}/${encodeURIComponent(sheetName)}`;
       const patchToSend = {...patch};
       if (patchToSend.history && Array.isArray(patchToSend.history)) {
         patchToSend.history = JSON.stringify(patchToSend.history);
@@ -148,8 +151,8 @@
       setCloudStatus(true);
     }
 
-    async function cloudDeleteById(id){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
+    async function cloudDeleteById(sheetName, id){
+      const url = `${STEIN_BASE}/${encodeURIComponent(sheetName)}`;
       const body = { condition:{ id } };
       const exec = async () => {
         const r = await fetch(url, { method:'DELETE', headers: steinHeaders(), body: JSON.stringify(body) });
@@ -330,6 +333,7 @@
     const STORAGE_KEY='fs-key-manager-v1';
     const state={
       keys:[],
+      requests:[],
       products:[],
       filterProduct:'All',
       filterType:'All',
@@ -373,21 +377,21 @@
       try{
         if (last.type === 'history_revert') {
           const { id, history } = last.payload;
-          if (CLOUD_ENABLED) { await cloudPatchById(id, { history }); await load(); }
+          if (CLOUD_ENABLED) { await cloudPatchById(STEIN_SHEET_KEYS, id, { history }); await load(); }
           else { const k = state.keys.find(x => x.id === id); if (k) k.history = history; await save(); }
         }
         else if(last.type==='add'){
           const ids = last.payload.ids || [];
-          if(CLOUD_ENABLED){ for(const id of ids){ await cloudDeleteById(id); } await load(); }
+          if(CLOUD_ENABLED){ for(const id of ids){ await cloudDeleteById(STEIN_SHEET_KEYS, id); } await load(); }
           else { state.keys = state.keys.filter(k=>!ids.includes(k.id)); await save(); }
         }else if(last.type==='delete'){
           const items = last.payload.items || [];
-          if(CLOUD_ENABLED){ await cloudAppend(items); await load(); }
+          if(CLOUD_ENABLED){ await cloudAppend(STEIN_SHEET_KEYS, items); await load(); }
           else { state.keys.unshift(...items); await save(); }
         }else if(last.type==='assign' || last.type==='release'){
           const prev = last.payload.prev; if(!prev) return;
           if(CLOUD_ENABLED){
-            await cloudPatchById(prev.id, { code: prev.code, product: prev.product, type: prev.type, status: prev.status, assignedTo: prev.assignedTo, reason: prev.reason, date: prev.date, assignedBy: prev.assignedBy || '', history: prev.history });
+            await cloudPatchById(STEIN_SHEET_KEYS, prev.id, { code: prev.code, product: prev.product, type: prev.type, status: prev.status, assignedTo: prev.assignedTo, reason: prev.reason, date: prev.date, assignedBy: prev.assignedBy || '', history: prev.history });
             await load();
           }else{
             const idx = state.keys.findIndex(x=>x.id===prev.id); if(idx>-1){ state.keys[idx]=Object.assign({}, prev); } await save();
@@ -414,9 +418,14 @@
         initializeProducts();
 
         try{
-          const rows = await cloudGetAll();
-          state.keys = rows.map(coerceRow);
-          validateColumns(rows);
+          const [keyRows, requestRows] = await Promise.all([
+            cloudGetAll(STEIN_SHEET_KEYS),
+            cloudGetAll(STEIN_SHEET_REQUESTS).catch(() => []) // Don't fail if requests sheet is missing
+          ]);
+          state.keys = keyRows.map(coerceRow);
+          state.requests = requestRows; // Assuming simple structure for now
+          validateColumns(keyRows, STEIN_SHEET_KEYS, EXPECTED_COLS_KEYS);
+          validateColumns(requestRows, STEIN_SHEET_REQUESTS, EXPECTED_COLS_REQUESTS);
           setCloudStatus(true);
           return render();
         }catch(err){
@@ -450,6 +459,7 @@
       const byProd = available.reduce((a,k)=>{ a[k.product]=(a[k.product]||0)+1; return a; },{});
       const allCount = available.length;
       const assignedCount = state.keys.filter(k=>k.status==='assigned' || k.status==='expired').length;
+      const pendingReqs = state.requests.filter(r => r.status === 'pending').length;
       
       const sidebar = $('#sidebar');
       if (!sidebar) return;
@@ -458,16 +468,20 @@
       const nav = document.createElement('div');
       nav.className = 'sidebar-nav';
 
+      const dashboardTab = `<div class="nav-item ${state.currentView === 'dashboard' ? 'active' : ''}" onclick="setView('dashboard')"><span>📊 Dashboard</span></div>`;
+      const requestsTab = `<div class="nav-item ${state.currentView === 'requests' ? 'active' : ''}" onclick="setView('requests')"><span>🙋 Requests</span><span class="chip"><span class="dot warn"></span>${pendingReqs}</span></div>`;
+
       const productTabs = state.products.map(p => p.name);
       const navItems = ['All', ...productTabs, 'Assigned'].map(p=>{
         let c=0, dot='ok';
         if(p==='All') c = allCount;
         else if(p==='Assigned'){ c = assignedCount; dot='warn'; }
         else c = (byProd[p]||0);
-        if (p === 'Assigned' && nav.innerHTML) return '<div class="nav-divider"></div>' + createNavItem(p, c, dot);
-        return createNavItem(p, c, dot);
+        const itemHtml = createNavItem(p, c, dot);
+        if (p === 'Assigned') return '<div class="nav-divider"></div>' + itemHtml;
+        return itemHtml;
       }).join('');
-      nav.innerHTML = navItems;
+      nav.innerHTML = dashboardTab + requestsTab + '<div class="nav-divider"></div>' + navItems;
       sidebar.innerHTML = header;
       sidebar.appendChild(nav);
 
@@ -476,6 +490,8 @@
       const singleSelect = document.getElementById('s_product');
       if (bulkSelect) bulkSelect.innerHTML = productOptions;
       if (singleSelect) singleSelect.innerHTML = productOptions;
+      const reqSelect = document.getElementById('req_product');
+      if (reqSelect) reqSelect.innerHTML = productOptions;
     }
     function createNavItem(p, count, dotClass){
       return `<div class="nav-item ${state.filterProduct === p ? 'active' : ''}" onclick="setFilter('${escapeHtml(p)}')">
@@ -484,12 +500,14 @@
               </div>`;
     }
     function setFilter(p){
+      setView('table');
       state.filterProduct=p;
       render();
       if (window.innerWidth <= 768) toggleSidebar(false);
     }
 
     function visibleRows(){
+      if (state.currentView !== 'table') return [];
       const inAssigned = state.filterProduct==='Assigned';
       const q=(state.search||'').toLowerCase();
       const typeWanted = state.filterType || 'All';
@@ -513,7 +531,7 @@
       if(!confirm('Delete this key from your list?')) return;
       const k=state.keys.find(x=>x.id===id); if(!k) return;
       pushUndo({ type:'delete', payload:{ items:[ Object.assign({}, k) ] } });
-      if(CLOUD_ENABLED){ await cloudDeleteById(k.id); await load(); return; }
+      if(CLOUD_ENABLED){ await cloudDeleteById(STEIN_SHEET_KEYS, k.id); await load(); return; }
       state.keys=state.keys.filter(x=>x.id!==id); save();
     }
 
@@ -539,7 +557,7 @@
         timestamp: new Date().toISOString()
       });
       if(CLOUD_ENABLED){
-        await cloudPatchById(k.id, patch);
+        await cloudPatchById(STEIN_SHEET_KEYS, k.id, patch);
         showToast('Released ✔');
         await load();
         return;
@@ -590,7 +608,7 @@
         timestamp: new Date().toISOString()
       });
       if(CLOUD_ENABLED){
-        await cloudPatchById(k.id, patch);
+        await cloudPatchById(STEIN_SHEET_KEYS, k.id, patch);
         closeDialog('assignModal');
         showToast('Saved ✔');
         await load();
@@ -632,6 +650,123 @@
       openDialog('historyModal');
     }
 
+    /* ---------- Request Workflow ---------- */
+    function openRequestModal(){
+      const reasonEl = $('#req_reason');
+      if (reasonEl) reasonEl.value = '';
+      openDialog('requestModal');
+    }
+
+    async function submitKeyRequest(){
+      const product = $('#req_product').value;
+      const reason = ($('#req_reason').value || '').trim();
+      const requester = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
+
+      if (!reason) return alert('Please provide a reason for your request.');
+
+      const request = {
+        id: uid(),
+        requester,
+        product,
+        reason,
+        status: 'pending',
+        requestedAt: new Date().toISOString()
+      };
+
+      if (CLOUD_ENABLED) {
+        await cloudAppend(STEIN_SHEET_REQUESTS, [request]);
+        await load();
+      } else {
+        state.requests.push(request);
+        await save();
+      }
+
+      sendDiscordNotification({
+        title: '🙋 New Key Request',
+        description: `**${requester}** has requested a key.`,
+        color: 3092790, // Blue
+        fields: [
+          { name: 'Product', value: product, inline: true },
+          { name: 'Reason', value: reason, inline: false }
+        ],
+        timestamp: new Date().toISOString()
+      });
+
+      closeDialog('requestModal');
+      showToast('Request submitted successfully!');
+    }
+
+    function openApproveModal(requestId) {
+      const request = state.requests.find(r => r.id === requestId);
+      if (!request) return alert('Request not found.');
+
+      const availableKeys = state.keys.filter(k => k.status === 'available' && k.product === request.product);
+      const keySelect = $('#approve_keyId');
+      if (!keySelect) return;
+
+      if (availableKeys.length === 0) {
+        return alert(`No available keys found for product "${request.product}". Please add more keys before approving.`);
+      }
+
+      keySelect.innerHTML = availableKeys.map(k => `<option value="${k.id}">${k.code}</option>`).join('');
+      $('#approve_requestId').value = requestId;
+      openDialog('approveModal');
+    }
+
+    async function confirmApproval() {
+      const requestId = $('#approve_requestId').value;
+      const keyId = $('#approve_keyId').value;
+      const request = state.requests.find(r => r.id === requestId);
+      const key = state.keys.find(k => k.id === keyId);
+      if (!request || !key) return alert('Request or Key not found.');
+
+      const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
+
+      // 1. Update the request
+      const requestPatch = { status: 'approved', processedAt: new Date().toISOString(), processedBy: currentUser };
+      // 2. Update the key
+      const keyPatch = {
+        status: 'assigned',
+        assignedTo: request.requester,
+        reason: `Request: ${request.reason}`,
+        date: new Date().toISOString().slice(0,10),
+        assignedBy: currentUser,
+        history: [...(key.history || []), { action: 'assigned', to: request.requester, reason: `Request: ${request.reason}`, by: currentUser, at: new Date().toISOString() }]
+      };
+
+      if (CLOUD_ENABLED) {
+        await Promise.all([
+          cloudPatchById(STEIN_SHEET_REQUESTS, requestId, requestPatch),
+          cloudPatchById(STEIN_SHEET_KEYS, keyId, keyPatch)
+        ]);
+        await load();
+      } else {
+        Object.assign(request, requestPatch);
+        Object.assign(key, keyPatch);
+        await save();
+      }
+
+      closeDialog('approveModal');
+      showToast('Request approved and key assigned!');
+    }
+
+    async function denyRequest(requestId) {
+      if (!confirm('Are you sure you want to deny this request?')) return;
+      const request = state.requests.find(r => r.id === requestId);
+      if (!request) return alert('Request not found.');
+
+      const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
+      const patch = { status: 'denied', processedAt: new Date().toISOString(), processedBy: currentUser };
+
+      if (CLOUD_ENABLED) {
+        await cloudPatchById(STEIN_SHEET_REQUESTS, requestId, patch);
+        await load();
+      } else {
+        Object.assign(request, patch);
+        await save();
+      }
+      showToast('Request denied.');
+    }
 
     /* ---------- CSV / backup / restore ---------- */
     function csvEscape(v){ v=String(v); if(v.includes('"')) v=v.replace(/"/g,'""'); if(v.includes(',')||v.includes('\n')||v.includes('"')) v='"'+v+'"'; return v; }
@@ -693,7 +828,7 @@
 
           if(toPost.length===0){ alert(skipped.length ? 'All rows were duplicates—nothing imported.' : 'Nothing to import.'); return; }
 
-          if(CLOUD_ENABLED){ await cloudAppend(toPost); await load(); }
+          if(CLOUD_ENABLED){ await cloudAppend(STEIN_SHEET_KEYS, toPost); await load(); }
           else { state.keys.unshift(...toPost); await save(); }
 
           let msg = 'Imported '+toPost.length+' row(s).';
@@ -708,7 +843,7 @@
     function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
 
     function renderTable(){
-      const rows=visibleRows(); const sorted = sortRows(rows);
+      const rows=visibleRows(); if (!rows) return; const sorted = sortRows(rows);
       if(!rows.length){ $('#tableWrap').innerHTML='<div class="empty">No keys yet. Use <strong>Bulk Add</strong> to paste your list, or <strong>New Single</strong> to add one.</div>'; return; }
       const query = (state.search || '').trim();
       function highlight(text){
@@ -744,6 +879,7 @@
             + (assignedish // if assigned
               ? '<button type="button" onclick="openAssign(\''+k.id+'\')">Edit</button><button type="button" onclick="releaseKey(\''+k.id+'\')">Release</button>'
               : '<button type="button" class="btn-primary" onclick="openAssign(\''+k.id+'\')">Assign</button>')
+            + '<button type="button" onclick="openHistory(\''+k.id+'\')">History</button>'
             + '<button type="button" onclick="removeKey(\''+k.id+'\')" style="border-color: rgba(239,71,111,.5);">Delete</button>'
           + '</td></tr>';
       }).join('');
@@ -778,16 +914,40 @@
       ].join('');
     }
 
+    function renderRequests(){
+      const host = $('#requestsWrap');
+      if (!host) return;
+      const pending = state.requests.filter(r => r.status === 'pending').sort((a,b) => new Date(b.requestedAt) - new Date(a.requestedAt));
+
+      if (pending.length === 0) {
+        host.innerHTML = '<div class="empty">No pending key requests.</div>';
+        return;
+      }
+
+      const list = pending.map(r => {
+        const d = new Date(r.requestedAt);
+        const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+        return `<div class="request-item">
+                  <div class="request-details">
+                    <div><strong>Requester:</strong> ${escapeHtml(r.requester)}</div>
+                    <div><strong>Product:</strong> ${escapeHtml(r.product)}</div>
+                    <div><strong>Reason:</strong> ${escapeHtml(r.reason)}</div>
+                    <div class="request-date">Requested on ${dateStr}</div>
+                  </div>
+                  <div class="request-actions">
+                    <button type="button" class="btn-primary" onclick="openApproveModal('${r.id}')">Approve</button>
+                    <button type="button" onclick="denyRequest('${r.id}')" style="border-color: rgba(239,71,111,.5);">Deny</button>
+                  </div>
+                </div>`;
+      }).join('');
+      host.innerHTML = `<div class="requests-list">${list}</div>`;
+    }
+
     function render(){
       renderSidebarNav(); renderTable(); renderStats();
       var inp = document.getElementById('search'); if(inp && inp.value !== state.search){ inp.value = state.search; }
       var tf = document.getElementById('typeFilter'); if(tf && tf.value !== state.filterType){ tf.value = state.filterType; }
     }
-
-    /* ---------- Toolbar handlers ---------- */
-    function onSearchInput(val){ state.search = (val || ''); render(); }
-    function onClearSearch(){ state.search=''; const i=document.getElementById('search'); if(i) i.value=''; render(); }
-    function onTypeFilter(val){ state.filterType = val || 'All'; render(); }
 
     function openProductManager(){
       renderProductList();
@@ -891,7 +1051,7 @@
             id: uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser, history
           };
         });
-        await cloudAppend(rows);
+        await cloudAppend(STEIN_SHEET_KEYS, rows);
         pushUndo({ type:'add', payload:{ ids: rows.map(r=>r.id) } });
         state.filterProduct = product;
         state.filterType = type;
@@ -932,7 +1092,7 @@
         const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
         const id = uid();
         const history = [{ action: 'created', by: nowUser, at: new Date().toISOString() }];
-        await cloudAppend([{ id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser, history }]);
+        await cloudAppend(STEIN_SHEET_KEYS, [{ id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser, history }]);
         pushUndo({ type:'add', payload:{ ids:[id] } });
         state.filterProduct = product;
         state.filterType = type;
@@ -952,11 +1112,12 @@
 
     /* ---------- Expose to inline handlers ---------- */
     window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign; window.openHistory=openHistory;
-    window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
-    window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
+    window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
+    window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd; window.setView=setView;
     window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
     window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit;
     window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
+    window.openRequestModal=openRequestModal; window.submitKeyRequest=submitKeyRequest; window.openApproveModal=openApproveModal; window.denyRequest=denyRequest; window.confirmApproval=confirmApproval;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
 
     function toggleManageMenu(){
