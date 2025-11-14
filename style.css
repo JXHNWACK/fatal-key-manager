@@ -389,10 +389,13 @@
       .toolbar .group.search button{ width:100%; }
 
       thead{ display:none; }
-      table{ border-spacing:0; }
+      table, tbody{ border-spacing:0; }
       table, tbody, tr, td{ display:block; width:100%; }
       tbody tr{
-        background:var(--panel); border:1px solid rgba(255,255,255,.06);
+        background: rgba(25, 25, 40, 0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border:1px solid rgba(255,255,255,.1);
         border-radius:14px; padding:10px 12px; margin:10px 0; box-shadow: var(--shadow);
       }
       tbody td{ border:0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; gap:10px; word-break:break-word; }
