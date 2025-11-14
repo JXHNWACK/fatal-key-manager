@@ -43,7 +43,7 @@
         <button id="hamburgerBtn" aria-label="Open menu">☰</button>
         <div id="mobile-overlay" onclick="toggleSidebar(false)"></div>
 
-        <div class="header">
+        <header class="header">
           <div class="logo" aria-label="Rogue Community logo"></div>
           <div class="title">
             <h1>Rogue Community — Key Manager</h1>
@@ -54,13 +54,13 @@
             <span id="cloudChip" class="chip" title="Cloud status"><span class="dot danger"></span><span id="cloudLabel">Cloud</span></span>
 
             <div class="user-menu" id="userMenu">
-              <button onclick="toggleUserDropdown()" class="btn-ghost" id="userBtn">User ▾</button>
+              <button onclick="toggleUserDropdown()" class="btn-ghost" id="userBtn" aria-haspopup="true" aria-expanded="false">User ▾</button>
               <div id="userDropdown" class="dropdown">
                 <button onclick="logout()">Logout</button>
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
         <div class="help">
           <details>
@@ -237,6 +237,6 @@
 
   <button id="backTop" onclick="scrollTopSmooth()" aria-label="Back to top" style="position:fixed;right:16px;bottom:16px;display:none;">↑ Top</button>
   <script src="app.js" defer></script>
+  <div class="footer-note">Rogue Community Key Manager · v1.2 · Updated 23 Oct 2025</div>
 </body>
-<div class="footer-note">Rogue Community Key Manager · v1.2 · Updated 23 Oct 2025</div>
 </html>
