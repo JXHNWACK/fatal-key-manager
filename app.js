@@ -944,7 +944,23 @@
     }
 
     function render(){
-      renderSidebarNav(); renderTable(); renderStats();
+      renderSidebarNav();
+      renderStats();
+
+      const tableWrap = $('#tableWrap');
+      const requestsWrap = $('#requestsWrap');
+      const toolbar = $('.toolbar');
+
+      if (tableWrap) tableWrap.style.display = state.currentView === 'table' ? 'block' : 'none';
+      if (requestsWrap) requestsWrap.style.display = state.currentView === 'requests' ? 'block' : 'none';
+      if (toolbar) toolbar.style.display = state.currentView === 'table' ? 'flex' : 'none';
+
+      if (state.currentView === 'table') {
+        renderTable();
+      } else if (state.currentView === 'requests') {
+        renderRequests();
+      }
+
       var inp = document.getElementById('search'); if(inp && inp.value !== state.search){ inp.value = state.search; }
       var tf = document.getElementById('typeFilter'); if(tf && tf.value !== state.filterType){ tf.value = state.filterType; }
     }
