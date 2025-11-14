@@ -43,8 +43,8 @@
     const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
     const STEIN_TOKEN   = '';             // add X-Auth-Token if private
     const CLOUD_ENABLED = true;
-    const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW';       // <— PASTE YOUR DISCORD WEBHOOK URL HERE
-    const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy'];
+    const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW'; // <— PASTE YOUR DISCORD WEBHOOK URL HERE
+    const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy','history'];
     function validateColumns(rows){
       try{
         const sample = rows && rows[0] ? rows[0] : null;
@@ -52,7 +52,7 @@
         const have = Object.keys(sample);
         const missing = EXPECTED_COLS.filter(k => !have.includes(k));
         if(missing.length){
-          const msg = 'Your Google Sheet tab "'+STEIN_SHEET+'" is missing header(s): '+missing.join(', ')+'.\n' +
+          const msg = 'Your Google Sheet tab "'+STEIN_SHEET+'" is missing header(s): '+missing.join(', ')+'. This may be due to a recent update. Please add the missing headers to fix.\n' +
                       'Add these EXACT headers in row 1 (A1..I1): '+EXPECTED_COLS.join(', ')+' — then try again.';
           console.warn('[RC Key Manager] Missing headers:', missing);
           showBanner(msg);
@@ -83,16 +83,22 @@
     }
 
     function coerceRow(r){
+      let history = [];
+      try {
+        if (r.history && typeof r.history === 'string') history = JSON.parse(r.history);
+        else if (Array.isArray(r.history)) history = r.history;
+      } catch(e) { /* ignore malformed history */ }
       return {
         id:         r.id         || (Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(2)),
         code:       r.code       || '',
         product:    r.product    || '',
         type:       r.type       || 'Day',
         status:     r.status     || 'available',
-        assignedTo: r.assignedTo || '',
+        assignedTo: r.assignedTo || '', // This is a string
         reason:     r.reason     || '',
         date:       r.date       || '',
-        assignedBy: r.assignedBy || ''
+        assignedBy: r.assignedBy || '',
+        history:    history
       };
     }
 
@@ -129,7 +135,11 @@
 
     async function cloudPatchById(id, patch){
       const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-      const body = { condition:{ id }, set: patch };
+      const patchToSend = {...patch};
+      if (patchToSend.history && Array.isArray(patchToSend.history)) {
+        patchToSend.history = JSON.stringify(patchToSend.history);
+      }
+      const body = { condition:{ id }, set: patchToSend };
       const exec = async () => {
         const r = await fetch(url, { method:'PUT', headers: steinHeaders(), body: JSON.stringify(body) });
         if(!r.ok){ const msg = await r.text().catch(()=>r.statusText); throw new Error(`Cloud patch failed: ${msg}`); }
@@ -361,7 +371,12 @@
     async function onUndo(){
       const last = UNDO_STACK.pop(); updateUndoUI(); if(!last) return;
       try{
-        if(last.type==='add'){
+        if (last.type === 'history_revert') {
+          const { id, history } = last.payload;
+          if (CLOUD_ENABLED) { await cloudPatchById(id, { history }); await load(); }
+          else { const k = state.keys.find(x => x.id === id); if (k) k.history = history; await save(); }
+        }
+        else if(last.type==='add'){
           const ids = last.payload.ids || [];
           if(CLOUD_ENABLED){ for(const id of ids){ await cloudDeleteById(id); } await load(); }
           else { state.keys = state.keys.filter(k=>!ids.includes(k.id)); await save(); }
@@ -372,7 +387,7 @@
         }else if(last.type==='assign' || last.type==='release'){
           const prev = last.payload.prev; if(!prev) return;
           if(CLOUD_ENABLED){
-            await cloudPatchById(prev.id, { code: prev.code, product: prev.product, type: prev.type, status: prev.status, assignedTo: prev.assignedTo, reason: prev.reason, date: prev.date, assignedBy: prev.assignedBy || '' });
+            await cloudPatchById(prev.id, { code: prev.code, product: prev.product, type: prev.type, status: prev.status, assignedTo: prev.assignedTo, reason: prev.reason, date: prev.date, assignedBy: prev.assignedBy || '', history: prev.history });
             await load();
           }else{
             const idx = state.keys.findIndex(x=>x.id===prev.id); if(idx>-1){ state.keys[idx]=Object.assign({}, prev); } await save();
@@ -505,14 +520,21 @@
     async function releaseKey(id){
       const k=state.keys.find(x=>x.id===id); if(!k) return;
       const prev = Object.assign({}, k); pushUndo({ type:'release', payload:{ prev } });
-      const patch = { status:'available', assignedTo:'', reason:'', date:'', assignedBy:'' };
+      const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
+      const newHistory = [...(k.history || []), {
+        action: 'released',
+        by: currentUser,
+        at: new Date().toISOString()
+      }];
+
+      const patch = { status:'available', assignedTo:'', reason:'', date:'', assignedBy:'', history: newHistory };
       sendDiscordNotification({
         title: '↩️ Key Released',
         description: `The key \`${prev.code}\` previously assigned to **${prev.assignedTo}** has been released and is now available.`,
         color: 45001, // #00B031 (a shade of ok)
         fields: [
           { name: 'Product', value: prev.product, inline: true },
-          { name: 'Released By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true }
+          { name: 'Released By', value: currentUser, inline: true }
         ],
         timestamp: new Date().toISOString()
       });
@@ -537,12 +559,23 @@
     async function saveAssign(){
       const k=state.keys.find(x=>x.id===assignId); if(!k) return;
       const prev = Object.assign({}, k); pushUndo({ type:'assign', payload:{ prev } });
+      const currentUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
+      const assignedTo = $('#m_user').value.trim();
+      const reason = $('#m_reason').value.trim();
+      const newHistory = [...(k.history || []), {
+        action: 'assigned',
+        to: assignedTo,
+        reason: reason,
+        by: currentUser,
+        at: new Date().toISOString()
+      }];
       const patch = {
-        assignedTo: $('#m_user').value.trim(),
-        reason: $('#m_reason').value.trim(),
+        assignedTo: assignedTo,
+        reason: reason,
         date: $('#m_date').value,
         status: 'assigned',
-        assignedBy: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown'
+        assignedBy: currentUser,
+        history: newHistory
       };
       sendDiscordNotification({
         title: '🔑 Key Assigned',
@@ -551,7 +584,7 @@
           { name: 'Product', value: k.product, inline: true },
           { name: 'Key', value: '`' + k.code + '`', inline: true },
           { name: 'Assigned To', value: patch.assignedTo, inline: false },
-          { name: 'Reason', value: patch.reason || '_Not provided_', inline: true },
+          { name: 'Reason', value: patch.reason || '_Not provided_', inline: false },
           { name: 'Assigned By', value: patch.assignedBy, inline: true }
         ],
         timestamp: new Date().toISOString()
@@ -566,6 +599,39 @@
       Object.assign(k, patch);
       closeDialog('assignModal'); showToast('Saved ✔'); save();
     }
+
+    function openHistory(id) {
+      const k = state.keys.find(x => x.id === id); if (!k) return;
+      const listEl = $('#historyList');
+      const infoEl = $('#historyKeyInfo');
+      if (!listEl || !infoEl) return;
+
+      infoEl.innerHTML = `<strong>Key:</strong> ${escapeHtml(k.code)} &nbsp;&nbsp; <strong>Product:</strong> ${escapeHtml(k.product)}`;
+
+      const history = k.history || [];
+      if (history.length === 0) {
+        listEl.innerHTML = '<div class="empty" style="padding:12px;">No history recorded for this key.</div>';
+      } else {
+        listEl.innerHTML = [...history].reverse().map(entry => {
+          const d = new Date(entry.at);
+          const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+          let content = '';
+          switch(entry.action) {
+            case 'created': content = `<strong>Created</strong> by <em>${escapeHtml(entry.by)}</em>`; break;
+            case 'assigned': content = `<strong>Assigned</strong> to <em>${escapeHtml(entry.to)}</em> by <em>${escapeHtml(entry.by)}</em> for: ${escapeHtml(entry.reason||'N/A')}`; break;
+            case 'released': content = `<strong>Released</strong> by <em>${escapeHtml(entry.by)}</em>`; break;
+            default: content = `<strong>${escapeHtml(entry.action)}</strong> by <em>${escapeHtml(entry.by)}</em>`;
+          }
+          return `<div class="history-item">
+                    <div class="history-content">${content}</div>
+                    <div class="history-date">${dateStr}</div>
+                  </div>`;
+        }).join('');
+      }
+
+      openDialog('historyModal');
+    }
+
 
     /* ---------- CSV / backup / restore ---------- */
     function csvEscape(v){ v=String(v); if(v.includes('"')) v=v.replace(/"/g,'""'); if(v.includes(',')||v.includes('\n')||v.includes('"')) v='"'+v+'"'; return v; }
@@ -619,7 +685,8 @@
             const row = {
               id: r.id || uid(), code, product: r.product || 'Shadow', type: r.type || 'Day',
               status: r.status || 'available', assignedTo: r.assignedTo || '', reason: r.reason || '',
-              date: r.date || '', assignedBy: r.assignedBy || currentUser
+              date: r.date || '', assignedBy: r.assignedBy || currentUser,
+              history: r.history || [{ action: 'created', by: currentUser, at: new Date().toISOString() }]
             };
             toPost.push(row); existing.add(key);
           }
@@ -674,7 +741,7 @@
           + '<td>'+(k.date||'')+'</td>'
           + '<td class="actions">'
             + '<button type="button" onclick="copyCode(\''+k.id+'\')">Copy</button>'
-            + (assignedish
+            + (assignedish // if assigned
               ? '<button type="button" onclick="openAssign(\''+k.id+'\')">Edit</button><button type="button" onclick="releaseKey(\''+k.id+'\')">Release</button>'
               : '<button type="button" class="btn-primary" onclick="openAssign(\''+k.id+'\')">Assign</button>')
             + '<button type="button" onclick="removeKey(\''+k.id+'\')" style="border-color: rgba(239,71,111,.5);">Delete</button>'
@@ -818,7 +885,12 @@
 
       if(CLOUD_ENABLED){
         const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
-        const rows = newCodes.map(code => ({ id: uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser }));
+        const rows = newCodes.map(code => {
+          const history = [{ action: 'created', by: nowUser, at: new Date().toISOString() }];
+          return {
+            id: uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser, history
+          };
+        });
         await cloudAppend(rows);
         pushUndo({ type:'add', payload:{ ids: rows.map(r=>r.id) } });
         state.filterProduct = product;
@@ -828,7 +900,10 @@
         closeDialog('bulkModal'); showToast('Added ✔'); await load(); return;
       }
 
-      const newItems=newCodes.map(code=>({id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''}));
+      const newItems=newCodes.map(code=>{
+        const history = [{ action: 'created', by: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', at: new Date().toISOString() }];
+        return {id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:'', history};
+      });
       state.keys.unshift(...newItems);
       pushUndo({ type:'add', payload:{ ids: newItems.map(r=>r.id) } });
       state.filterProduct = product;
@@ -856,7 +931,8 @@
       if(CLOUD_ENABLED){
         const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || '';
         const id = uid();
-        await cloudAppend([{ id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser }]);
+        const history = [{ action: 'created', by: nowUser, at: new Date().toISOString() }];
+        await cloudAppend([{ id, code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy: nowUser, history }]);
         pushUndo({ type:'add', payload:{ ids:[id] } });
         state.filterProduct = product;
         state.filterType = type;
@@ -864,7 +940,8 @@
         closeDialog('singleModal'); showToast('Added ✔'); await load(); return;
       }
 
-      const item={id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:''};
+      const history = [{ action: 'created', by: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', at: new Date().toISOString() }];
+      const item={id:uid(), code, product, type, status:'available', assignedTo:'', reason:'', date:'', assignedBy:'', history};
       state.keys.unshift(item);
       pushUndo({ type:'add', payload:{ ids:[item.id] } });
       state.filterProduct = product;
@@ -874,7 +951,7 @@
     }
 
     /* ---------- Expose to inline handlers ---------- */
-    window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign;
+    window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign; window.openHistory=openHistory;
     window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
     window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
     window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;

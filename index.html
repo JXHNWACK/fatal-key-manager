@@ -241,6 +241,21 @@
     </form>
   </dialog>
 
+  <!-- History Modal -->
+  <dialog id="historyModal">
+    <form method="dialog">
+      <div class="modal-header">
+        <strong>Key History</strong>
+        <button type="button" onclick="closeDialog('historyModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="historyKeyInfo" style="font-size:13px; color:var(--muted); margin-bottom:16px;"></div>
+        <div id="historyList"></div>
+      </div>
+      <div class="modal-footer"><button type="button" onclick="closeDialog('historyModal')">Close</button></div>
+    </form>
+  </dialog>
+
   <button id="backTop" onclick="scrollTopSmooth()" aria-label="Back to top" style="position:fixed;right:16px;bottom:16px;display:none;">↑ Top</button>
   <script src="app.js" defer></script>
   <div class="footer-note">Rogue Community Key Manager · v1.2 · Updated 23 Oct 2025</div>
