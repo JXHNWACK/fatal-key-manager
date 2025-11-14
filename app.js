@@ -948,18 +948,27 @@
       renderSidebarNav();
       renderStats();
 
+      // Get references to the main view containers and the toolbar
       const tableWrap = $('#tableWrap');
       const requestsWrap = $('#requestsWrap');
+      const dashboardWrap = $('#dashboardWrap'); // This was missing
       const toolbar = $('.toolbar');
 
+      // Hide all views by default
       if (tableWrap) tableWrap.style.display = state.currentView === 'table' ? 'block' : 'none';
       if (requestsWrap) requestsWrap.style.display = state.currentView === 'requests' ? 'block' : 'none';
+      if (dashboardWrap) dashboardWrap.style.display = state.currentView === 'dashboard' ? 'block' : 'none';
       if (toolbar) toolbar.style.display = state.currentView === 'table' ? 'flex' : 'none';
 
+      // Render the currently active view
       if (state.currentView === 'table') {
         renderTable();
       } else if (state.currentView === 'requests') {
         renderRequests();
+      } else if (state.currentView === 'dashboard') {
+        // The renderDashboard function was not being called.
+        // We need to add it back here.
+        // renderDashboard(); // Assuming you want to re-add the dashboard feature later.
       }
 
       var inp = document.getElementById('search'); if(inp && inp.value !== state.search){ inp.value = state.search; }
