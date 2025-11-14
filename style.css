@@ -176,6 +176,7 @@
       animation: pulse-glow-gold 2.5s infinite;
     }
     .welcome-card p{ margin:6px 0 16px; color:var(--muted); font-size: 14px; }
+    .welcome-card p{ margin:6px 0 16px; color:var(--muted); }
     .welcome-form{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
     .welcome-form input, .welcome-form select{
       background:var(--panel-2); color:var(--text); border:1px solid rgba(255,255,255,.1);
@@ -211,6 +212,7 @@
       font-style: italic;
       font-size: 14px;
     }
+    .welcome-card .login-progress .bar{ height:100%; width:0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); animation: progress-run 3.6s ease-in-out forwards; }
     @keyframes progress-run{ from{ width:0% } to{ width:100% } }
 
     .welcome-card.shake{ animation: shake .4s ease; }
