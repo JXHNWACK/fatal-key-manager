@@ -333,7 +333,7 @@
       products:[],
       filterProduct:'All',
       filterType:'All',
-      search:'', sortKey:'', sortDir:'asc',
+      search: '', sortKey: '', sortDir: 'asc'
     };
 
     function applyTheme(){
@@ -784,10 +784,6 @@
       var tf = document.getElementById('typeFilter'); if(tf && tf.value !== state.filterType){ tf.value = state.filterType; }
     }
 
-    function openProductManager(){
-      renderProductList();
-      openDialog('productModal');
-    }
     function renderProductList(){
       const listEl = document.getElementById('productList');
       if (!listEl) return;
@@ -947,10 +943,7 @@
 
     /* ---------- Expose to inline handlers ---------- */
     window.setFilter=setFilter; window.copyCode=copyCode; window.removeKey=removeKey; window.releaseKey=releaseKey; window.openAssign=openAssign; window.openHistory=openHistory;
-    window.onClearSearch=onClearSearch; window.onBulkAdd=onBulkAdd; window.onNewSingle=onNewSingle; window.onExportCSV=onExportCSV; window.onBackupJSON=onBackupJSON; window.onImportJSON=onImportJSON;
-    window.toggleUserDropdown=toggleUserDropdown; window.logout=logout;
-    window.attemptLogin=attemptLogin; window.pickPresetUser=pickPresetUser; window.openProductManager=openProductManager; window.onAddProduct=onAddProduct; window.onDeleteProduct=onDeleteProduct; window.openProductEditor=openProductEditor; window.onSaveProductEdit=onSaveProductEdit;
-    window.onRefreshCloud=onRefreshCloud; window.onClearLocalCache=onClearLocalCache;
+    window.saveAssign=saveAssign; window.saveBulkAdd=saveBulkAdd; window.saveSingleAdd=saveSingleAdd;
     window.onUndo=onUndo; window.toggleManageMenu=toggleManageMenu; window.setSort=setSort;
 
     function toggleManageMenu(){
@@ -974,7 +967,6 @@
       setNetStatus(navigator.onLine);
       await load();
       if(!Array.isArray(state.keys)) state.keys=[];
-      window.scrollTo(0,0); document.documentElement.scrollLeft = 0; document.body.scrollLeft = 0;
     })();
 
     function toggleSidebar(forceOpen){
