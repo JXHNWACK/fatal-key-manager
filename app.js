@@ -333,7 +333,7 @@
       products:[],
       filterProduct:'All',
       filterType:'All',
-      search:'', sortKey:'', sortDir:'asc'
+      search:'', sortKey:'', sortDir:'asc',
     };
 
     function applyTheme(){
