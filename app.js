@@ -968,13 +968,12 @@
     });
 
     /* ---------- init ---------- */
-    (function(){
+    (async function(){
       applyTheme();
       startLoginRotator();
       setNetStatus(navigator.onLine);
-      load();
+      await load();
       if(!Array.isArray(state.keys)) state.keys=[];
-      render();
       window.scrollTo(0,0); document.documentElement.scrollLeft = 0; document.body.scrollLeft = 0;
     })();
 
