@@ -422,14 +422,16 @@
         }catch(err){
           setCloudStatus(false, String(err && err.message || err));
           console.warn('Cloud load failed, falling back to localStorage', err);
+          // This was missing, so the app wouldn't render from local cache on cloud failure.
+          try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw){ Object.assign(state, JSON.parse(raw)); } }catch(e){}
+          render();
         }
       }
-      try{
-        const raw=localStorage.getItem(STORAGE_KEY);
-        if(raw){ Object.assign(state, JSON.parse(raw)); }
-        initializeProducts();
-      }catch(e){}
-      render();
+      // Fallback for when cloud is disabled
+      if (!CLOUD_ENABLED) {
+        try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw){ Object.assign(state, JSON.parse(raw)); } }catch(e){}
+        render();
+      }
     }
 
     function initializeProducts(){
