@@ -47,7 +47,7 @@
     const GOOGLE_CLIENT_ID = '649659526814-br5qr47c9cjavreljb142e01nsheoc0s.apps.googleusercontent.com'; // <— PASTE YOUR OAUTH CLIENT ID
     const GOOGLE_API_KEY = 'AIzaSyALs4xk8k6dYGHDOAz8MnCrT1SqHFEmgHM';                                // <— PASTE YOUR API KEY
     const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/1HUOyM03mxN4VCZTHcGjqtXAsDlfsMCr3vx-gSPwTVL4';                         // <— PASTE YOUR SPREADSHEET ID
-    const SHEET_NAME = 'Keys';                                            // <— CHANGE THIS to match your sheet tab name
+    const SHEET_NAME = 'STEIN_SHEET';                                            // <— CHANGE THIS to match your sheet tab name
     const SHEET_RANGE = `${SHEET_NAME}!A:J`;
 
     const CLOUD_ENABLED = true;
