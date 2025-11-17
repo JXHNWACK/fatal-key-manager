@@ -518,39 +518,35 @@
     async function save(renderAfter=true){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} if(renderAfter) render(); }
 
     async function load(){
-      if(CLOUD_ENABLED){
-        // Cloud mode: products are not synced, so we use localStorage as a fallback.
-        try{
-          const raw=localStorage.getItem(STORAGE_KEY);
-          if(raw){
-            const localState = JSON.parse(raw);
-            if (localState.products && localState.products.length > 0) {
-              state.products = localState.products;
-            }
-          }
-        }catch(e){}
-        initializeProducts();
+      // Always try to load products from local storage first.
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const localState = JSON.parse(raw);
+          if (localState.products) state.products = localState.products;
+        }
+      } catch(e) {}
+      initializeProducts();
 
-        try{
+      if (CLOUD_ENABLED) {
+        try {
           const rows = await cloudGetAll();
           state.keys = rows.map(coerceRow);
           setCloudStatus(true);
-          return render();
-        }catch(err){
-          setCloudStatus(false, String(err && err.message || err));
-          console.warn('Cloud load failed, falling back to localStorage', err);
-          // On initial load, if the cloud fails, we should not proceed to render an empty state.
-          // Instead, we show a clear error and stop.
-          showBanner('Failed to load data from Google Sheets. Please check your connection and refresh. Error: ' + (err.message || err));
-          throw new Error("Initial cloud load failed."); // Halt execution
+        } catch (err) {
+          setCloudStatus(false, String(err?.result?.error?.message || err?.message || err));
+          console.error('Cloud load failed.', err);
+          showBanner('Failed to load data from Google Sheets. Check console for details. Error: ' + (err?.result?.error?.message || err?.message || 'Unknown'));
+          // Render the shell but with empty keys, so the user sees the error.
+          state.keys = [];
         }
+      } else {
+        // Fallback to local storage only if cloud is disabled.
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) { Object.assign(state, JSON.parse(raw)); }
+        } catch(e) {}
       }
-      // Fallback to local storage only if cloud is disabled.
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) { Object.assign(state, JSON.parse(raw)); }
-      } catch(e) {}
-      initializeProducts();
       render();
     }
 
@@ -966,11 +962,14 @@
       if (CLOUD_ENABLED){
         if (btn) btn.disabled = true;
         try {
+          // Clear the keys before loading to ensure a fresh state is shown.
+          state.keys = [];
+          render(); // Show an empty table immediately for better UX.
           SYNC_TOASTED = false;
           await load();
         } catch(e) {
-          // The load function now throws an error on failure, which we catch here.
-          // The banner is already shown by the load function.
+          // The `load` function now handles its own errors and banners.
+          console.error("Refresh failed", e);
         } finally {
           if (btn) btn.disabled = false;
         }
