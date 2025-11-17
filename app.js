@@ -246,12 +246,13 @@
         }
       }
 
-      await gapi.client.sheets.spreadsheets.values.update({
+      const execUpdate = () => gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!A${rowNum}`,
         valueInputOption: 'USER_ENTERED',
         resource: { values: [newValues] },
       });
+      await backoff(execUpdate);
       setCloudStatus(true);
     }
 
