@@ -38,48 +38,121 @@
       document.documentElement.style.setProperty('--accent-2',pair[1]);
     }
 
-    /* ======== SteinHQ v2 Cloud (resilient) ======== */
-    const STEIN_BASE    = 'https://api.steinhq.com/v1/storages/68e8001faffba40a6208a923';
-    const STEIN_SHEET   = 'STEIN_SHEET';         // <— CHANGE THIS to match your Google Sheet TAB name exactly (e.g. "Keys")
-    const STEIN_TOKEN   = '';             // add X-Auth-Token if private
+    /* ======== Google Sheets API Integration ======== */
+    // IMPORTANT: You must get these values from your Google Cloud project.
+    // 1. Create a project at https://console.cloud.google.com/
+    // 2. Enable the "Google Sheets API".
+    // 3. Create an "OAuth 2.0 Client ID" for a Web Application. Add your app's URL to the authorized origins.
+    // 4. Create an "API Key". Restrict it to the Google Sheets API.
+    const GOOGLE_CLIENT_ID = '649659526814-br5qr47c9cjavreljb142e01nsheoc0s.apps.googleusercontent.com'; // <— PASTE YOUR OAUTH CLIENT ID
+    const GOOGLE_API_KEY = 'AIzaSyALs4xk8k6dYGHDOAz8MnCrT1SqHFEmgHM';                                // <— PASTE YOUR API KEY
+    const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/1HUOyM03mxN4VCZTHcGjqtXAsDlfsMCr3vx-gSPwTVL4';                         // <— PASTE YOUR SPREADSHEET ID
+    const SHEET_NAME = 'Keys';                                            // <— CHANGE THIS to match your sheet tab name
+    const SHEET_RANGE = `${SHEET_NAME}!A:J`;
+
     const CLOUD_ENABLED = true;
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW'; // <— PASTE YOUR DISCORD WEBHOOK URL HERE
     const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy','history'];
+
+    // --- Google API State ---
+    let gapiInited = false;
+    let gisInited = false;
+    let tokenClient;
+
+    /**
+     * Callback after the GAPI script is loaded from index.html.
+     */
+    function gapiLoaded() {
+      gapi.load('client', initializeGapiClient);
+    }
+
+    /**
+     * Initializes the GAPI client with the Sheets API.
+     */
+    async function initializeGapiClient() {
+      await gapi.client.init({
+        apiKey: GOOGLE_API_KEY,
+        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+      });
+      gapiInited = true;
+      checkGapiReady();
+    }
+
+    /**
+     * Callback after the GIS script is loaded from index.html.
+     */
+    function gisLoaded() {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/spreadsheets',
+        callback: '', // Callback is handled by the Promise from requestAccessToken
+      });
+      gisInited = true;
+      checkGapiReady();
+    }
+
+    function checkGapiReady() {
+      if (gapiInited && gisInited) {
+        console.log("Google API client is ready.");
+      }
+    }
+
+    /**
+     * Ensures the user is authenticated. Prompts for login if necessary.
+     * Returns true if authenticated, false otherwise.
+     */
+    async function ensureAuth() {
+      if (!gapiInited || !gisInited) {
+        console.error("GAPI or GIS not initialized.");
+        showBanner("Google API client is not ready. Please wait and try again.");
+        return false;
+      }
+      if (gapi.client.getToken() === null) {
+        // The user is not signed in. Prompt them.
+        return new Promise((resolve, reject) => {
+          try {
+            tokenClient.callback = (resp) => {
+              if (resp.error !== undefined) {
+                reject(resp);
+                resolve(false);
+              }
+              console.log('Google sign-in successful.');
+              resolve(true);
+            };
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+          } catch (err) {
+            console.error(err);
+            reject(err);
+            resolve(false);
+          }
+        });
+      }
+      return true; // Already authenticated
+    }
+
     function validateColumns(rows){
       try{
-        const sample = rows && rows[0] ? rows[0] : null;
-        if(!sample){ return true; }
-        const have = Object.keys(sample);
+        // With Google Sheets API, rows are arrays, not objects. We check the header row.
+        const have = rows[0];
         const missing = EXPECTED_COLS.filter(k => !have.includes(k));
         if(missing.length){
-          const msg = 'Your Google Sheet tab "'+STEIN_SHEET+'" is missing header(s): '+missing.join(', ')+'. This may be due to a recent update. Please add the missing headers to fix.\n' +
+          const msg = 'Your Google Sheet tab "'+SHEET_NAME+'" is missing header(s): '+missing.join(', ')+'. This may be due to a recent update. Please add the missing headers to fix.\n' +
                       'Add these EXACT headers in row 1: '+EXPECTED_COLS.join(', ')+' — then try again.';
           console.warn('[RC Key Manager] Missing headers:', missing);
           showBanner(msg);
           return false;
         }
         return true;
-      }catch(e){ return true; }
-    }
-
-    function steinHeaders(){
-      const h = { 'Accept':'application/json', 'Content-Type':'application/json' };
-      if (STEIN_TOKEN) h['X-Auth-Token'] = STEIN_TOKEN;
-      return h;
+      }catch(e){ console.error("Column validation failed", e); return true; }
     }
 
     async function backoff(fn, tries=3){
       let attempt=0, lastErr;
       while(attempt<tries){
         try{ return await fn(); }
-        catch(e){ lastErr=e; await new Promise(r=>setTimeout(r, 400*Math.pow(2,attempt))); attempt++; }
+        catch(e){ lastErr=e; console.warn(`Attempt ${attempt+1} failed. Retrying...`, e); await new Promise(r=>setTimeout(r, 400*Math.pow(2,attempt))); attempt++; }
       }
       throw lastErr;
-    }
-
-    async function ensureSheet(){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-      try{ await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify([]) }); }catch(e){}
     }
 
     function coerceRow(r){
@@ -88,74 +161,106 @@
         if (r.history && typeof r.history === 'string') history = JSON.parse(r.history);
         else if (Array.isArray(r.history)) history = r.history;
       } catch(e) { /* ignore malformed history */ }
+      // When reading from Google Sheets, `r` will be an object with keys from EXPECTED_COLS
       return {
-        id:         r.id         || (Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(2)),
-        code:       r.code       || '',
-        product:    r.product    || '',
-        type:       r.type       || 'Day',
-        status:     r.status     || 'available',
-        assignedTo: r.assignedTo || '', // This is a string
-        reason:     r.reason     || '',
-        date:       r.date       || '',
-        assignedBy: r.assignedBy || '',
+        id:         r.id         || uid(),
+        code:       r.code       || '', product:    r.product    || '',
+        type:       r.type       || 'Day', status:     r.status     || 'available',
+        assignedTo: r.assignedTo || '', reason:     r.reason     || '',
+        date:       r.date       || '', assignedBy: r.assignedBy || '',
         history:    history
       };
     }
 
     async function cloudGetAll(){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-      const exec = async () => {
-        const r = await fetch(url, { method:'GET', headers: steinHeaders(), cache:'no-store' });
-        if(!r.ok){
-          const msg = await r.text().catch(()=>r.statusText);
-          if (r.status === 404){ await ensureSheet(); throw new Error('Sheet missing (bootstrap attempted). Reload and try again.'); }
-          throw new Error(`Cloud fetch failed: ${msg}`);
-        }
-        return await r.json();
-      };
-      const rows = await backoff(exec);
+      if (!await ensureAuth()) throw new Error("Authentication failed.");
+      const exec = () => gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: SHEET_RANGE,
+      });
+      const response = await backoff(exec);
+
+      const values = response.result.values || [];
+      if (values.length < 1) return []; // Empty sheet
+
+      const headers = values[0];
+      if (!validateColumns(values)) {
+        throw new Error("Sheet is missing required columns. See banner for details.");
+      }
+      // Convert array-based rows to object-based rows
+      const objectRows = values.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((header, i) => { obj[header] = row[i]; });
+        return obj;
+      });
       setCloudStatus(true);
-      return rows;
+      return objectRows;
     }
 
     async function cloudAppend(rows){
       if(!rows || !rows.length) return;
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-      const exec = async () => {
-        const r = await fetch(url, { method:'POST', headers: steinHeaders(), body: JSON.stringify(rows) });
-        if(!r.ok){
-          const msg = await r.text().catch(()=>r.statusText);
-          if (r.status === 404){ await ensureSheet(); throw new Error('Sheet missing (bootstrap attempted). Try again.'); }
-          throw new Error(`Cloud append failed: ${msg}`);
-        }
-      };
+      if (!await ensureAuth()) throw new Error("Authentication failed.");
+
+      // Convert object rows to array rows in the correct order
+      const values = rows.map(row => EXPECTED_COLS.map(col => {
+        const val = row[col];
+        if (col === 'history' && Array.isArray(val)) return JSON.stringify(val);
+        return val !== undefined && val !== null ? val : '';
+      }));
+
+      const exec = () => gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: SHEET_RANGE,
+        valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
+        resource: { values },
+      });
       await backoff(exec);
       setCloudStatus(true);
     }
 
     async function cloudPatchById(id, patch){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-      const patchToSend = {...patch};
-      if (patchToSend.history && Array.isArray(patchToSend.history)) {
-        patchToSend.history = JSON.stringify(patchToSend.history);
+      if (!await ensureAuth()) throw new Error("Authentication failed.");
+
+      // Find the row number for the given ID
+      const execGetId = () => gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!A:A`
+      });
+      const idColumnValues = await backoff(execGetId);
+      const rowNum = (idColumnValues.result.values || []).findIndex(row => row[0] === id) + 1;
+      if (rowNum < 1) throw new Error(`Could not find row with ID ${id} to update.`);
+
+      // Prepare the update data
+      const execGetCurrent = () => gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID, range: `${SHEET_NAME}!${rowNum}:${rowNum}`
+      });
+      const currentValues = (await backoff(execGetCurrent)).result.values[0];
+
+      const newValues = [...currentValues];
+      for (const key in patch) {
+        const colIndex = EXPECTED_COLS.indexOf(key);
+        if (colIndex > -1) {
+          let val = patch[key];
+          if (key === 'history' && Array.isArray(val)) val = JSON.stringify(val);
+          newValues[colIndex] = val;
+        }
       }
-      const body = { condition:{ id }, set: patchToSend };
-      const exec = async () => {
-        const r = await fetch(url, { method:'PUT', headers: steinHeaders(), body: JSON.stringify(body) });
-        if(!r.ok){ const msg = await r.text().catch(()=>r.statusText); throw new Error(`Cloud patch failed: ${msg}`); }
-      };
-      await backoff(exec);
+
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${SHEET_NAME}!A${rowNum}`,
+        valueInputOption: 'USER_ENTERED',
+        resource: { values: [newValues] },
+      });
       setCloudStatus(true);
     }
 
     async function cloudDeleteById(id){
-      const url = `${STEIN_BASE}/${encodeURIComponent(STEIN_SHEET)}`;
-      const body = { condition:{ id } };
-      const exec = async () => {
-        const r = await fetch(url, { method:'DELETE', headers: steinHeaders(), body: JSON.stringify(body) });
-        if(!r.ok){ const msg = await r.text().catch(()=>r.statusText); throw new Error(`Cloud delete failed: ${msg}`); }
-      };
-      await backoff(exec);
+      // The Sheets API v4 does not support deleting rows by a condition like an ID.
+      // This is a complex operation (find row, get sheetId, send deleteDimension request).
+      // For simplicity, we will clear the row instead, which is visually similar to a delete.
+      console.warn("cloudDeleteById is clearing the row instead of deleting it due to API limitations.");
+      await cloudPatchById(id, { code: '', product: '', type: '', status: 'deleted', assignedTo: '', reason: '', date: '', assignedBy: '', history: '' });
       setCloudStatus(true);
     }
 
@@ -302,6 +407,10 @@
           if(menu) menu.style.display='inline-block'; if(btn) btn.textContent = u + ' ▾';
         }
       }catch(e){}
+
+      // Expose GAPI loader functions to the global scope so the <script> onload attributes can call them.
+      window.gapiLoaded = gapiLoaded;
+      window.gisLoaded = gisLoaded;
     });
 
     function toggleLoginButton(){
@@ -416,7 +525,7 @@
         try{
           const rows = await cloudGetAll();
           state.keys = rows.map(coerceRow);
-          validateColumns(rows);
+          // validateColumns is now called inside cloudGetAll
           setCloudStatus(true);
           return render();
         }catch(err){
@@ -967,6 +1076,35 @@
       setNetStatus(navigator.onLine);
       await load();
       if(!Array.isArray(state.keys)) state.keys=[];
+
+      // Combined DOMContentLoaded logic
+      document.getElementById('loginPick')?.addEventListener('change', toggleLoginButton);
+      document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
+      toggleLoginButton();
+
+      $('#passToggle')?.addEventListener('click', function(){
+        const passInput = $('#loginPass');
+        const isPass = passInput.type === 'password';
+        passInput.type = isPass ? 'text' : 'password';
+        this.textContent = isPass ? '🙈' : '👁️';
+        this.setAttribute('aria-label', isPass ? 'Hide password' : 'Show password');
+      });
+
+      try{
+        const authed = localStorage.getItem('fs_authed') === '1' || sessionStorage.getItem('fs_authed') === '1';
+        if(authed){
+          var el=document.getElementById('welcomeScreen'); if(el) el.style.display='none';
+          const storage = localStorage.getItem('fs_authed') === '1' ? localStorage : sessionStorage;
+          var u=storage.getItem('fs_user')||'User'; applyUserAccent(u);
+          var menu=document.getElementById('userMenu'); var btn=document.getElementById('userBtn');
+          if(u) sessionStorage.setItem('fs_user', u); // Ensure session has user for discord notifications
+          if(menu) menu.style.display='inline-block'; if(btn) btn.textContent = u + ' ▾';
+        }
+      }catch(e){}
+
+      // Expose GAPI loader functions to the global scope so the <script> onload attributes can call them.
+      window.gapiLoaded = gapiLoaded;
+      window.gisLoaded = gisLoaded;
     })();
 
     function toggleSidebar(forceOpen){

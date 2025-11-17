@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rogue Community — Key Manager</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 </head>
 <body>
   <!-- Global banner & toast -->
@@ -255,7 +257,7 @@
   </dialog>
 
   <button id="backTop" onclick="scrollTopSmooth()" aria-label="Back to top" style="position:fixed;right:16px;bottom:16px;display:none;">↑ Top</button>
-  <script src="app.js" defer></script>
+  <script src="app.js"></script>
   <div class="footer-note">Rogue Community Key Manager · v1.2 · Updated 23 Oct 2025</div>
 </body>
 </html>
