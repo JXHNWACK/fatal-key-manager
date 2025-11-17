@@ -534,19 +534,23 @@
         try{
           const rows = await cloudGetAll();
           state.keys = rows.map(coerceRow);
-          // validateColumns is now called inside cloudGetAll
           setCloudStatus(true);
           return render();
         }catch(err){
           setCloudStatus(false, String(err && err.message || err));
           console.warn('Cloud load failed, falling back to localStorage', err);
+          // On initial load, if the cloud fails, we should not proceed to render an empty state.
+          // Instead, we show a clear error and stop.
+          showBanner('Failed to load data from Google Sheets. Please check your connection and refresh. Error: ' + (err.message || err));
+          throw new Error("Initial cloud load failed."); // Halt execution
         }
       }
-      try{
-        const raw=localStorage.getItem(STORAGE_KEY);
-        if(raw){ Object.assign(state, JSON.parse(raw)); }
-        initializeProducts();
-      }catch(e){}
+      // Fallback to local storage only if cloud is disabled.
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) { Object.assign(state, JSON.parse(raw)); }
+      } catch(e) {}
+      initializeProducts();
       render();
     }
 
@@ -958,9 +962,18 @@
     }
 
     async function onRefreshCloud(){
+      const btn = document.querySelector('button[onclick="onRefreshCloud()"]');
       if (CLOUD_ENABLED){
-        try{ SYNC_TOASTED = false; await load(); }
-        catch(e){ alert('Refresh failed: ' + (e && e.message ? e.message : e)); }
+        if (btn) btn.disabled = true;
+        try {
+          SYNC_TOASTED = false;
+          await load();
+        } catch(e) {
+          // The load function now throws an error on failure, which we catch here.
+          // The banner is already shown by the load function.
+        } finally {
+          if (btn) btn.disabled = false;
+        }
       }else{ alert('Cloud sync is disabled. Set CLOUD_ENABLED = true to use Refresh.'); }
     }
     function onClearLocalCache(){ try{ localStorage.removeItem(STORAGE_KEY); alert('Local cache cleared. The page will reload.'); }catch(e){} location.reload(); }
