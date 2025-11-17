@@ -201,6 +201,15 @@
       transition: border-color .2s ease, box-shadow .2s ease;
     }
     .welcome-form input:focus{ border-color: var(--accent); box-shadow: 0 0 12px rgba(244,113,116,.35); outline:none; }
+    .password-wrapper{ position: relative; }
+    #passToggle{
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 4px;
+      z-index: 2;
+    }
     .welcome-actions{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
     .welcome-error{ display:none; margin-top:8px; color:var(--danger); font-size:13px; }
     .login-options {

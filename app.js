@@ -360,8 +360,11 @@
       const dev = qs.get('dev') === '1';
       const as  = (qs.get('as') || '').trim();
       const u = (dev && as) ? as : uPick;
+      
+      const isDevBypass = dev && as;
+      const isPasswordCorrect = USERS[u] && USERS[u] === p;
 
-      if ((USERS[u] && USERS[u] === p) || (dev && as)){
+      if (isDevBypass || isPasswordCorrect) {
         stopLoginRotator();
         var greet = document.querySelector('#welcomeScreen .welcome-greeting');
         if(greet){ greet.textContent = 'WELCOME ' + u.toUpperCase(); greet.style.display = 'block'; setTimeout(function(){ greet.style.opacity = '1'; }, 50); }
@@ -387,7 +390,6 @@
           if(btnU) btnU.textContent = (u || 'User') + ' ▾';
           applyUserAccent(u || 'User');
         }, 3600);
-        return false;
       }else{
         var err = document.getElementById('welcomeError'); if(err) err.style.display = 'block';
         var card = document.querySelector('#welcomeScreen .welcome-card');
@@ -395,6 +397,7 @@
         return false;
       }
     }
+    window.attemptLogin = attemptLogin; // Expose to inline handler
 
     function toggleLoginButton(){
       var pick = document.getElementById('loginPick');
