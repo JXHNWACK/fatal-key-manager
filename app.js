@@ -48,7 +48,7 @@
     const GOOGLE_API_KEY = 'AIzaSyALs4xk8k6dYGHDOAz8MnCrT1SqHFEmgHM';                                // <— PASTE YOUR API KEY
     const SPREADSHEET_ID = '1HUOyM03mxN4VCZTHcGjqtXAsDlfsMCr3vx-gSPwTVL4';                         // <— PASTE YOUR SPREADSHEET ID
     const SHEET_NAME = 'Keys';                                            // <— CHANGE THIS to match your sheet tab name
-    const SHEET_RANGE = `${SHEET_NAME}!A:I`;
+    const SHEET_RANGE = `${SHEET_NAME}!A:J`;
 
     const CLOUD_ENABLED = true;
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW'; // <— PASTE YOUR DISCORD WEBHOOK URL HERE
@@ -972,8 +972,6 @@
           await load();
         } catch(e) {
           // The `load` function now handles its own errors and banners.
-          // The `load` function now handles its own errors and banners,
-          // so we just log this for debugging.
           console.error("Refresh failed", e);
         } finally {
           if (btn) btn.disabled = false;
