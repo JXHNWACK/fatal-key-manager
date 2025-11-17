@@ -23,7 +23,7 @@
         <h1>Rogue Community</h1>
         <p>Key Manager — Login</p>
         <form class="welcome-form" onsubmit="return attemptLogin(event)">
-          <select id="loginPick" onchange="pickPresetUser(this.value)" style="display:none;">
+          <select id="loginPick" name="user" onchange="pickPresetUser(this.value)" style="display:none;">
             <option value="Administrator" selected>Administrator</option>
           </select>
           <div class="password-wrapper">
