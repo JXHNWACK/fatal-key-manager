@@ -58,6 +58,7 @@
     let gapiInited = false;
     let gisInited = false;
     let tokenClient;
+    let gapiReadyPromise = null;
 
     /**
      * Callback after the GAPI script is loaded from index.html.
@@ -92,9 +93,20 @@
     }
 
     function checkGapiReady() {
-      if (gapiInited && gisInited) {
+      if (gapiInited && gisInited && gapiReadyPromise) {
         console.log("Google API client is ready.");
+        gapiReadyPromise.resolve();
       }
+    }
+
+    function whenGapiReady() {
+      if (!gapiReadyPromise) {
+        let resolver;
+        const promise = new Promise(resolve => { resolver = resolve; });
+        gapiReadyPromise = { promise, resolve: resolver };
+        checkGapiReady(); // In case it's already ready
+      }
+      return gapiReadyPromise.promise;
     }
 
     /**
@@ -102,11 +114,7 @@
      * Returns true if authenticated, false otherwise.
      */
     async function ensureAuth() {
-      if (!gapiInited || !gisInited) {
-        console.error("GAPI or GIS not initialized.");
-        showBanner("Google API client is not ready. Please wait and try again.");
-        return false;
-      }
+      await whenGapiReady();
       if (gapi.client.getToken() === null) {
         // The user is not signed in. Prompt them.
         return new Promise((resolve, reject) => {
@@ -1073,6 +1081,10 @@
     /* ---------- init ---------- */
     (async function(){
       applyTheme();
+
+      // Initialize the GAPI ready promise immediately.
+      whenGapiReady();
+
       startLoginRotator();
       setNetStatus(navigator.onLine);
       await load();
