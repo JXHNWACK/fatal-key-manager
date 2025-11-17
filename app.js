@@ -38,6 +38,10 @@
       document.documentElement.style.setProperty('--accent-2',pair[1]);
     }
 
+    // Expose GAPI loader functions to the global scope immediately to prevent race conditions.
+    window.gapiLoaded = gapiLoaded;
+    window.gisLoaded = gisLoaded;
+
     /* ======== Google Sheets API Integration ======== */
     // IMPORTANT: You must get these values from your Google Cloud project.
     // 1. Create a project at https://console.cloud.google.com/
@@ -391,36 +395,6 @@
         return false;
       }
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('loginPick')?.addEventListener('change', toggleLoginButton);
-      document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
-      toggleLoginButton();
-
-      $('#passToggle')?.addEventListener('click', function(){
-        const passInput = $('#loginPass');
-        const isPass = passInput.type === 'password';
-        passInput.type = isPass ? 'text' : 'password';
-        this.textContent = isPass ? '🙈' : '👁️';
-        this.setAttribute('aria-label', isPass ? 'Hide password' : 'Show password');
-      });
-
-      try{
-        const authed = localStorage.getItem('fs_authed') === '1' || sessionStorage.getItem('fs_authed') === '1';
-        if(authed){
-          var el=document.getElementById('welcomeScreen'); if(el) el.style.display='none';
-          const storage = localStorage.getItem('fs_authed') === '1' ? localStorage : sessionStorage;
-          var u=storage.getItem('fs_user')||'User'; applyUserAccent(u);
-          var menu=document.getElementById('userMenu'); var btn=document.getElementById('userBtn');
-          if(u) sessionStorage.setItem('fs_user', u); // Ensure session has user for discord notifications
-          if(menu) menu.style.display='inline-block'; if(btn) btn.textContent = u + ' ▾';
-        }
-      }catch(e){}
-
-      // Expose GAPI loader functions to the global scope so the <script> onload attributes can call them.
-      window.gapiLoaded = gapiLoaded;
-      window.gisLoaded = gisLoaded;
-    });
 
     function toggleLoginButton(){
       var pick = document.getElementById('loginPick');
@@ -1142,10 +1116,6 @@
           if(menu) menu.style.display='inline-block'; if(btn) btn.textContent = u + ' ▾';
         }
       }catch(e){}
-
-      // Expose GAPI loader functions to the global scope so the <script> onload attributes can call them.
-      window.gapiLoaded = gapiLoaded;
-      window.gisLoaded = gisLoaded;
     })();
 
     function toggleSidebar(forceOpen){
