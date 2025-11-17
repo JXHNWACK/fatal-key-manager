@@ -534,11 +534,9 @@
           state.keys = rows.map(coerceRow);
           setCloudStatus(true);
         } catch (err) {
-          setCloudStatus(false, String(err?.result?.error?.message || err?.message || err));
           const errMsg = err?.result?.error?.message || err?.message || 'Unknown error';
           setCloudStatus(false, errMsg);
           console.error('Cloud load failed.', err);
-          showBanner('Failed to load data from Google Sheets. Check console for details. Error: ' + (err?.result?.error?.message || err?.message || 'Unknown'));
           showBanner('Failed to load data from Google Sheets. Check console for details. Error: ' + errMsg);
           // Render the shell but with empty keys, so the user sees the error.
           state.keys = [];
