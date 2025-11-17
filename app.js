@@ -48,7 +48,7 @@
     const GOOGLE_API_KEY = 'AIzaSyALs4xk8k6dYGHDOAz8MnCrT1SqHFEmgHM';                                // <— PASTE YOUR API KEY
     const SPREADSHEET_ID = '1HUOyM03mxN4VCZTHcGjqtXAsDlfsMCr3vx-gSPwTVL4';                         // <— PASTE YOUR SPREADSHEET ID
     const SHEET_NAME = 'Keys';                                            // <— CHANGE THIS to match your sheet tab name
-    const SHEET_RANGE = `${SHEET_NAME}!A:J`;
+    const SHEET_RANGE = `${SHEET_NAME}!A:I`;
 
     const CLOUD_ENABLED = true;
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW'; // <— PASTE YOUR DISCORD WEBHOOK URL HERE
@@ -535,8 +535,11 @@
           setCloudStatus(true);
         } catch (err) {
           setCloudStatus(false, String(err?.result?.error?.message || err?.message || err));
+          const errMsg = err?.result?.error?.message || err?.message || 'Unknown error';
+          setCloudStatus(false, errMsg);
           console.error('Cloud load failed.', err);
           showBanner('Failed to load data from Google Sheets. Check console for details. Error: ' + (err?.result?.error?.message || err?.message || 'Unknown'));
+          showBanner('Failed to load data from Google Sheets. Check console for details. Error: ' + errMsg);
           // Render the shell but with empty keys, so the user sees the error.
           state.keys = [];
         }
@@ -969,6 +972,8 @@
           await load();
         } catch(e) {
           // The `load` function now handles its own errors and banners.
+          // The `load` function now handles its own errors and banners,
+          // so we just log this for debugging.
           console.error("Refresh failed", e);
         } finally {
           if (btn) btn.disabled = false;
