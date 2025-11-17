@@ -949,12 +949,27 @@
         return alert('A product with this name already exists.');
       }
 
-      // Update all keys that use the old product name
-      state.keys.forEach(k => { if (k.product === oldName) { k.product = newName; } });
       // Update the product in the products list
       const p = state.products.find(prod => prod.name === oldName);
       if (p) { p.name = newName; p.color = newColor; }
-      await save();
+
+      if (CLOUD_ENABLED) {
+        showToast('Syncing product name change...');
+        const keysToUpdate = state.keys.filter(k => k.product === oldName);
+        for (const key of keysToUpdate) {
+          try {
+            await cloudPatchById(key.id, { product: newName });
+            key.product = newName; // Update local state after successful patch
+          } catch (e) {
+            console.error(`Failed to update product name for key ${key.code}`, e);
+            alert(`Failed to update product name for key ${key.code}. Please refresh and try again.`);
+          }
+        }
+        await save(); // Save the updated product list and any successful key changes
+      } else {
+        state.keys.forEach(k => { if (k.product === oldName) { k.product = newName; } });
+        await save();
+      }
       closeDialog('editProductModal');
     }
 
