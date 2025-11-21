@@ -400,13 +400,13 @@
     window.attemptLogin = attemptLogin; // Expose to inline handler
 
     function toggleLoginButton(){
-      var pick = document.getElementById('loginPick');
       var pass = document.getElementById('loginPass');
       var btn  = document.getElementById('loginGo');
       if(!btn) return;
-      var hasUser = !!(pick && pick.value);
+      // The user picker is hidden, so we only need to check for a password.
+      // The username is hardcoded to 'Administrator'.
       var hasPass = !!(pass && pass.value && pass.value.length>0);
-      btn.disabled = !(hasUser && hasPass);
+      btn.disabled = !hasPass;
     }
 
     function toggleUserDropdown(){
