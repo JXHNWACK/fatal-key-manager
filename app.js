@@ -409,18 +409,6 @@
       btn.disabled = !hasPass;
     }
 
-    function toggleUserDropdown(){
-      var dd=document.getElementById('userDropdown');
-      if(dd) dd.style.display = (dd.style.display==='block'?'none':'block');
-    }
-    function logout(){
-      try{
-        sessionStorage.removeItem('fs_authed'); sessionStorage.removeItem('fs_user');
-        localStorage.removeItem('fs_authed'); localStorage.removeItem('fs_user');
-      }catch(e){}
-      location.reload();
-    }
-
     /* ---------- local state ---------- */
     const STORAGE_KEY='fs-key-manager-v1';
     const state={
@@ -1095,11 +1083,6 @@
       await load();
       if(!Array.isArray(state.keys)) state.keys=[];
 
-      // Combined DOMContentLoaded logic
-      document.getElementById('loginPick')?.addEventListener('change', toggleLoginButton);
-      document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
-      toggleLoginButton();
-
       $('#passToggle')?.addEventListener('click', function(){
         const passInput = $('#loginPass');
         const isPass = passInput.type === 'password';
@@ -1108,6 +1091,11 @@
         this.setAttribute('aria-label', isPass ? 'Hide password' : 'Show password');
       });
 
+      // Attach login form listeners only if the welcome screen is visible
+      if (document.getElementById('welcomeScreen')?.style.display !== 'none') {
+        document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
+        toggleLoginButton(); // Initial check
+      }
       try{
         const authed = localStorage.getItem('fs_authed') === '1' || sessionStorage.getItem('fs_authed') === '1';
         if(authed){
