@@ -39,7 +39,6 @@
     }
 
     // Expose GAPI loader functions to the global scope immediately to prevent race conditions.
-    window.gapiLoaded = gapiLoaded;
     window.gisLoaded = gisLoaded;
 
     /* ======== Google Sheets API Integration ======== */
@@ -48,8 +47,8 @@
     // 2. Enable the "Google Sheets API".
     // 3. Create an "OAuth 2.0 Client ID" for a Web Application. Add your app's URL to the authorized origins.
     // 4. Create an "API Key". Restrict it to the Google Sheets API.
-    const GOOGLE_CLIENT_ID = '649659526814-br5qr47c9cjavreljb142e01nsheoc0s.apps.googleusercontent.com'; // <— PASTE YOUR OAUTH CLIENT ID
-    const GOOGLE_API_KEY = 'AIzaSyALs4xk8k6dYGHDOAz8MnCrT1SqHFEmgHM';                                // <— PASTE YOUR API KEY
+    const GOOGLE_CLIENT_ID = '649659526814-c1spd627if8i26m0nm15trn1reqm1652.apps.googleusercontent.com'; // <— PASTE YOUR OAUTH CLIENT ID
+    const GOOGLE_API_KEY = 'AIzaSyDQlaageknL2NQ3v-k5iPOVEafkFV3a-iU';                                // <— PASTE YOUR API KEY
     const SPREADSHEET_ID = '1HUOyM03mxN4VCZTHcGjqtXAsDlfsMCr3vx-gSPwTVL4';                         // <— PASTE YOUR SPREADSHEET ID
     const SHEET_NAME = 'Keys';                                            // <— CHANGE THIS to match your sheet tab name
     const SHEET_RANGE = `${SHEET_NAME}!A:J`;
@@ -61,27 +60,6 @@
     // --- Google API State ---
     let gapiInited = false;
     let gisInited = false;
-    let tokenClient;
-    let gapiReadyPromise = null;
-
-    /**
-     * Callback after the GAPI script is loaded from index.html.
-     */
-    function gapiLoaded() {
-      gapi.load('client', initializeGapiClient);
-    }
-
-    /**
-     * Initializes the GAPI client with the Sheets API.
-     */
-    async function initializeGapiClient() {
-      await gapi.client.init({
-        apiKey: GOOGLE_API_KEY,
-        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-      });
-      gapiInited = true;
-      checkGapiReady();
-    }
 
     /**
      * Callback after the GIS script is loaded from index.html.
@@ -92,22 +70,35 @@
         scope: 'https://www.googleapis.com/auth/spreadsheets',
         callback: '', // Callback is handled by the Promise from requestAccessToken
       });
+      gapi.load('client', initializeGapiClient);
+    }
+
+    let tokenClient;
+    let gapiReadyPromise = null;
+
+    async function initializeGapiClient() {
+      await gapi.client.init({
+        apiKey: GOOGLE_API_KEY,
+        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+      });
+      gapiInited = true;
       gisInited = true;
       checkGapiReady();
     }
 
     function checkGapiReady() {
-      if (gapiInited && gisInited && gapiReadyPromise) {
+      if (gapiInited && gapiReadyPromise && gapiReadyPromise.resolve) {
         console.log("Google API client is ready.");
         gapiReadyPromise.resolve();
       }
     }
 
     function whenGapiReady() {
-      if (!gapiReadyPromise) {
+      if (!gapiReadyPromise || !gapiReadyPromise.promise) {
         let resolver;
         const promise = new Promise(resolve => { resolver = resolve; });
         gapiReadyPromise = { promise, resolve: resolver };
+        // If already ready from a previous call, resolve immediately.
         checkGapiReady(); // In case it's already ready
       }
       return gapiReadyPromise.promise;
@@ -121,22 +112,19 @@
       await whenGapiReady();
       if (gapi.client.getToken() === null) {
         // The user is not signed in. Prompt them.
-        return new Promise((resolve, reject) => {
-          try {
-            tokenClient.callback = (resp) => {
-              if (resp.error !== undefined) {
-                reject(resp);
-                resolve(false);
-              }
+        return new Promise((resolve) => {
+          tokenClient.callback = (resp) => {
+            if (resp.error !== undefined) {
+              console.error('Google Auth Error:', resp.error);
+              showBanner(`Google Auth Error: ${resp.error}. Please ensure pop-ups are enabled and try again.`);
+              resolve(false);
+            } else {
               console.log('Google sign-in successful.');
               resolve(true);
-            };
-            tokenClient.requestAccessToken({ prompt: 'consent' });
-          } catch (err) {
-            console.error(err);
-            reject(err);
-            resolve(false);
-          }
+            }
+          };
+          // This will trigger the Google sign-in pop-up.
+          tokenClient.requestAccessToken({ prompt: 'consent' });
         });
       }
       return true; // Already authenticated
@@ -352,13 +340,13 @@
 
     function attemptLogin(ev){
       if(ev) ev.preventDefault();
-      const uPick = (document.getElementById('loginPick')?.value || '').trim();
       const p = (document.getElementById('loginPass')?.value || '');
 
       // dev bypass: ?dev=1&as=JXHNWACK
       const qs = new URLSearchParams(location.search);
       const dev = qs.get('dev') === '1';
       const as  = (qs.get('as') || '').trim();
+      const uPick = 'Administrator'; // The user picker is hidden, so we hardcode the user.
       const u = (dev && as) ? as : uPick;
       
       const isDevBypass = dev && as;
@@ -1073,40 +1061,37 @@
 
     /* ---------- init ---------- */
     (async function(){
+      // --- Step 1: Set up the UI that doesn't depend on anything else. ---
       applyTheme();
-
-      // Initialize the GAPI ready promise immediately.
-      whenGapiReady();
-
-      startLoginRotator();
       setNetStatus(navigator.onLine);
-      await load();
-      if(!Array.isArray(state.keys)) state.keys=[];
+      startLoginRotator();
 
-      $('#passToggle')?.addEventListener('click', function(){
-        const passInput = $('#loginPass');
-        const isPass = passInput.type === 'password';
-        passInput.type = isPass ? 'text' : 'password';
-        this.textContent = isPass ? '🙈' : '👁️';
-        this.setAttribute('aria-label', isPass ? 'Hide password' : 'Show password');
-      });
-
-      // Attach login form listeners only if the welcome screen is visible
-      if (document.getElementById('welcomeScreen')?.style.display !== 'none') {
-        document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
-        toggleLoginButton(); // Initial check
-      }
+      // --- Step 2: Check if the user is already logged in from a previous session. ---
       try{
         const authed = localStorage.getItem('fs_authed') === '1' || sessionStorage.getItem('fs_authed') === '1';
         if(authed){
-          var el=document.getElementById('welcomeScreen'); if(el) el.style.display='none';
+          // --- Step 2a: User IS logged in. Hide login screen and proceed. ---
+          const el=document.getElementById('welcomeScreen'); if(el) el.style.display='none';
           const storage = localStorage.getItem('fs_authed') === '1' ? localStorage : sessionStorage;
-          var u=storage.getItem('fs_user')||'User'; applyUserAccent(u);
-          var menu=document.getElementById('userMenu'); var btn=document.getElementById('userBtn');
+          const u=storage.getItem('fs_user')||'User';
+          applyUserAccent(u);
+          const menu=document.getElementById('userMenu');
+          const btn=document.getElementById('userBtn');
           if(u) sessionStorage.setItem('fs_user', u); // Ensure session has user for discord notifications
           if(menu) menu.style.display='inline-block'; if(btn) btn.textContent = u + ' ▾';
+
+          await whenGapiReady(); // Wait for Google APIs to be ready
+          await load(); // Load data from the cloud
+        } else {
+          // --- Step 2b: User IS NOT logged in. Make the login form interactive. ---
+          document.getElementById('loginPass')?.addEventListener('input', toggleLoginButton);
+          $('#passToggle')?.addEventListener('click', function(){
+            const passInput = $('#loginPass'); const isPass = passInput.type === 'password';
+            passInput.type = isPass ? 'text' : 'password'; this.textContent = isPass ? '🙈' : '👁️';
+          });
+          toggleLoginButton(); // Initial check
         }
-      }catch(e){}
+      } catch(e) { console.error("Auth check failed", e); }
     })();
 
     function toggleSidebar(forceOpen){
