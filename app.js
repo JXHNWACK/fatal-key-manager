@@ -61,15 +61,14 @@
     /**
      * Callback after the GIS script is loaded from index.html.
      */
-    window.gisLoaded = function() {
     function gisLoaded() {
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/spreadsheets',
         callback: '', // Callback is handled by the Promise from requestAccessToken
       });
+      gisInited = true; // Mark GIS as initialized
       gapi.load('client', initializeGapiClient);
-    }
     }
 
     let tokenClient;
@@ -81,7 +80,6 @@
         discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
       });
       gapiInited = true;
-      gisInited = true;
       checkGapiReady();
     }
 
