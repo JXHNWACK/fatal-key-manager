@@ -38,9 +38,6 @@
       document.documentElement.style.setProperty('--accent-2',pair[1]);
     }
 
-    // Expose GAPI loader functions to the global scope immediately to prevent race conditions.
-    window.gisLoaded = gisLoaded;
-
     /* ======== Google Sheets API Integration ======== */
     // IMPORTANT: You must get these values from your Google Cloud project.
     // 1. Create a project at https://console.cloud.google.com/
@@ -64,6 +61,7 @@
     /**
      * Callback after the GIS script is loaded from index.html.
      */
+    window.gisLoaded = function() {
     function gisLoaded() {
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
@@ -71,6 +69,7 @@
         callback: '', // Callback is handled by the Promise from requestAccessToken
       });
       gapi.load('client', initializeGapiClient);
+    }
     }
 
     let tokenClient;
@@ -490,7 +489,7 @@
           const errMsg = err?.result?.error?.message || err?.message || 'Unknown error';
           setCloudStatus(false, errMsg);
           console.error('Cloud load failed.', err);
-          showBanner('Failed to load data from Google Sheets. Check console for details. Error: ' + errMsg);
+          showBanner('Failed to load data from Google Sheets. Check browser console (F12) for details. Error: ' + errMsg);
           // Render the shell but with empty keys, so the user sees the error.
           state.keys = [];
         }
