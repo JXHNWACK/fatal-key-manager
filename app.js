@@ -61,13 +61,13 @@
     /**
      * Callback after the GIS script is loaded from index.html.
      */
-    function gisLoaded() {
+    window.gisLoaded = function gisLoaded() {
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/spreadsheets',
         callback: '', // Callback is handled by the Promise from requestAccessToken
       });
-      gisInited = true; // Mark GIS as initialized
+      gisInited = true;
       gapi.load('client', initializeGapiClient);
     }
 
@@ -84,7 +84,7 @@
     }
 
     function checkGapiReady() {
-      if (gapiInited && gapiReadyPromise && gapiReadyPromise.resolve) {
+      if (gapiInited && gisInited && gapiReadyPromise && gapiReadyPromise.resolve) {
         console.log("Google API client is ready.");
         gapiReadyPromise.resolve();
       }
@@ -95,8 +95,6 @@
         let resolver;
         const promise = new Promise(resolve => { resolver = resolve; });
         gapiReadyPromise = { promise, resolve: resolver };
-        // If already ready from a previous call, resolve immediately.
-        checkGapiReady(); // In case it's already ready
       }
       return gapiReadyPromise.promise;
     }
