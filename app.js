@@ -70,6 +70,7 @@
       gisInited = true;
       gapi.load('client', initializeGapiClient);
     }
+    if(window.gisLoadedPending) window.gisLoaded();
 
     let tokenClient;
     let gapiReadyPromise = null;

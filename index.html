@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rogue Community — Key Manager</title>
   <link rel="stylesheet" href="style.css">
-  <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()" crossorigin="anonymous"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="if(window.gisLoaded) window.gisLoaded(); else window.gisLoadedPending = true;" crossorigin="anonymous"></script>
 </head>
 <body>
   <!-- Global banner & toast -->
@@ -51,7 +52,7 @@
         <div id="mobile-overlay" onclick="toggleSidebar(false)"></div>
 
         <header class="header">
-          <div class="logo" aria-label="Rogue Community logo"></div>
+          <div class="logo" role="img" aria-label="Rogue Community logo"></div>
           <div class="title">
             <h1>Rogue Community — Key Manager</h1>
             <p>A tool for staff to track and distribute keys provided by Rogue Community.</p>
