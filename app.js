@@ -70,6 +70,144 @@
       gisInited = true;
       gapi.load('client', initializeGapiClient);
     }
+--- /Users/wadekerr/Desktop/key management/app.js
++++ /Users/wadekerr/Desktop/key management/app.js
+@@ -87,11 +87,16 @@
+     let gapiReadyPromise = null;
+ 
+     async function initializeGapiClient() {
+-      await gapi.client.init({
+-        apiKey: GOOGLE_API_KEY,
+-        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+-      });
+-      gapiInited = true;
+-      checkGapiReady();
++      try {
++        await gapi.client.init({
++          apiKey: GOOGLE_API_KEY,
++          discoveryDocs: ['https://sheets.googleapis.com//rest?version=v4'],
++        });
++        gapiInited = true;
++        checkGapiReady();
++      } catch(e) {
++        console.error("GAPI Init Error", e);
++        showBanner("Google API Init Failed: " + (e.message || e.error || JSON.stringify(e)));
++      }
+     }
+ 
+     function checkGapiReady() {
+@@ -119,13 +124,13 @@
+           tokenClient.callback = (resp) => {
+             if (resp.error !== undefined) {
+               console.error('Google Auth Error:', resp.error);
+-              showBanner(`Google Auth Error: ${resp.error}. Please ensure pop-ups are enabled and try again.`);
++              showBanner(`Google Auth Error: ${resp.error}.`);
+               resolve(false);
+             } else {
+               console.log('Google sign-in successful.');
+               resolve(true);
+             }
+           };
+           // This will trigger the Google sign-in pop-up.
+-          tokenClient.requestAccessToken({ prompt: 'consent' });
++          tokenClient.requestAccessToken({});
+         });
+       }
+       return true; // Already authenticated
+@@ -149,15 +154,26 @@
+       throw lastErr;
+     }
+ 
++    async function callSheetApi(fn){
++      if (!await ensureAuth()) throw new Error("Authentication failed.");
++      try{ return await backoff(fn); }
++      catch(e){
++        if(e?.result?.error?.code === 401){
++          console.warn("Token expired (401). Refreshing...");
++          gapi.client.setToken(null);
++          if(!await ensureAuth()) throw new Error("Re-authentication failed.");
++          return await backoff(fn);
++        }
++        throw e;
++      }
++    }
++
+     function coerceRow(r){
+       let history = [];
+       try {
+@@ -176,11 +192,10 @@
+     }
+ 
+     async function cloudGetAll(){
+-      if (!await ensureAuth()) throw new Error("Authentication failed.");
+       const exec = () => gapi.client.sheets.spreadsheets.values.get({
+         spreadsheetId: SPREADSHEET_ID,
+         range: SHEET_RANGE,
+       });
+-      const response = await backoff(exec);
++      const response = await callSheetApi(exec);
+ 
+       const values = response.result.values || [];
+       if (values.length < 1) return []; // Empty sheet
+@@ -197,7 +212,6 @@
+ 
+     async function cloudAppend(rows){
+       if(!rows || !rows.length) return;
+-      if (!await ensureAuth()) throw new Error("Authentication failed.");
+ 
+       // Convert object rows to array rows in the correct order
+       const values = rows.map(row => EXPECTED_COLS.map(col => {
+@@ -212,17 +226,15 @@
+         insertDataOption: 'INSERT_ROWS',
+         resource: { values },
+       });
+-      await backoff(exec);
++      await callSheetApi(exec);
+       setCloudStatus(true);
+     }
+ 
+     async function cloudPatchById(id, patch){
+-      if (!await ensureAuth()) throw new Error("Authentication failed.");
+-
+       // Find the row number for the given ID
+       const execGetId = () => gapi.client.sheets.spreadsheets.values.get({
+         spreadsheetId: SPREADSHEET_ID, range: `!A:A`
+       });
+-      const idColumnValues = await backoff(execGetId);
++      const idColumnValues = await callSheetApi(execGetId);
+       const rowNum = (idColumnValues.result.values || []).findIndex(row => row[0] === id) + 1;
+       if (rowNum < 1) throw new Error(`Could not find row with ID  to update.`);
+ 
+@@ -230,7 +242,7 @@
+       const execGetCurrent = () => gapi.client.sheets.spreadsheets.values.get({
+         spreadsheetId: SPREADSHEET_ID, range: `!:`
+       });
+-      const currentValues = (await backoff(execGetCurrent)).result.values[0];
++      const currentValues = (await callSheetApi(execGetCurrent)).result.values[0];
+ 
+       const newValues = [...currentValues];
+       for (const key in patch) {
+@@ -248,7 +260,7 @@
+         valueInputOption: 'USER_ENTERED',
+         resource: { values: [newValues] },
+       });
+-      await backoff(execUpdate);
++      await callSheetApi(execUpdate);
+       setCloudStatus(true);
+     }
+ 
+@@ -420,7 +432,9 @@
+           const errMsg = err?.result?.error?.message || err?.message || 'Unknown error';
+           setCloudStatus(false, errMsg);
+           console.error('Cloud load failed.', err);
+-          showBanner('Failed to load data from Google Sheets. Check browser console (F12) for details. Error: ' + errMsg);
++          let niceMsg = 'Failed to load data from Google Sheets. Error: ' + errMsg;
++          if(errMsg.includes('403') || errMsg.includes('404')) niceMsg += ' (Check SPREADSHEET_ID and permissions)';
++          showBanner(niceMsg);
+           // Render the shell but with empty keys, so the user sees the error.
+           state.keys = [];
+         }
+
     if(window.gisLoadedPending) window.gisLoaded();
 
     let tokenClient;
