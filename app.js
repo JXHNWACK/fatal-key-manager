@@ -214,12 +214,17 @@
     let gapiReadyPromise = null;
 
     async function initializeGapiClient() {
-      await gapi.client.init({
-        apiKey: GOOGLE_API_KEY,
-        discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-      });
-      gapiInited = true;
-      checkGapiReady();
+      try {
+        await gapi.client.init({
+          apiKey: GOOGLE_API_KEY,
+          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+        });
+        gapiInited = true;
+        checkGapiReady();
+      } catch(e) {
+        console.error("GAPI Init Error", e);
+        showBanner("Google API Init Failed: " + (e.message || e.error || JSON.stringify(e)));
+      }
     }
 
     function checkGapiReady() {
