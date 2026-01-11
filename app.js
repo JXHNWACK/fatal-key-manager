@@ -61,6 +61,7 @@ async function apiRequest(endpoint, options = {}) {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'x-auth': sessionStorage.getItem('fs_pass') || '',
         ...options.headers,
       },
     });
@@ -123,17 +124,13 @@ window.addEventListener('online', () => setNetStatus(true));
 window.addEventListener('offline', () => setNetStatus(false));
 
 function sendDiscordNotification(embed) {
-  if (!DISCORD_WEBHOOK_URL) return;
-  fetch(DISCORD_WEBHOOK_URL, {
+  apiRequest('/api/notify', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ embeds: [embed] })
   }).catch(e => console.error('Discord notification failed', e));
 }
 
 /* ======== Login ======== */
-// SECURITY WARNING: Client-side auth is insecure. Move authentication to the server.
-const USERS = { 'Administrator':'1212' };
 
 var __rotTimer = null;
 var __rotMsgs = ['Welcome to Rogue Community','Securely manage your keys','Staff access only'];
@@ -164,7 +161,7 @@ function toggleLoginButton(){
   btn.disabled = !(pass && pass.value && pass.value.length > 0);
 }
 
-function attemptLogin(ev){
+async function attemptLogin(ev){
   if(ev) ev.preventDefault();
   const p = (document.getElementById('loginPass')?.value || '');
   console.log('Login attempt');
@@ -175,8 +172,18 @@ function attemptLogin(ev){
   const u = (dev && as) ? as : 'Administrator';
   
   const isDevBypass = dev && as;
-  const isPasswordCorrect = USERS[u] && USERS[u] === p;
-  console.log('Password match:', isPasswordCorrect);
+  let isPasswordCorrect = false;
+
+  if (!isDevBypass) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: p })
+      });
+      if (res.ok) isPasswordCorrect = true;
+    } catch(e) { console.error('Auth check failed', e); }
+  }
   
   if (isDevBypass || isPasswordCorrect) {
     console.log('Login successful!');
@@ -214,9 +221,11 @@ function attemptLogin(ev){
       const storage = remember ? localStorage : sessionStorage;
       try {
         storage.setItem('fs_authed','1');
+        storage.setItem('fs_pass', p);
         storage.setItem('fs_user', u);
       } catch(e){}
       
+      sessionStorage.setItem('fs_pass', p);
       sessionStorage.setItem('fs_user', u);
       
       var menu = document.getElementById('userMenu');
@@ -944,8 +953,10 @@ function logout(){
   try {
     localStorage.removeItem('fs_authed');
     localStorage.removeItem('fs_user');
+    localStorage.removeItem('fs_pass');
     sessionStorage.removeItem('fs_authed');
     sessionStorage.removeItem('fs_user');
+    sessionStorage.removeItem('fs_pass');
   } catch(e){}
   location.reload();
 }

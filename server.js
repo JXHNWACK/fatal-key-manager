@@ -11,6 +11,48 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// ==================== SECURITY & NOTIFICATIONS ====================
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '1212';
+
+// 1. Login Endpoint
+app.post('/api/auth/login', (req, res) => {
+  if (req.body.password === ADMIN_PASSWORD) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
+});
+
+// 2. Auth Middleware (Protects all /api routes except login)
+app.use('/api', (req, res, next) => {
+  if (req.path === '/auth/login') return next();
+  
+  const auth = req.headers['x-auth'];
+  if (auth === ADMIN_PASSWORD) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+});
+
+// 3. Discord Proxy Endpoint
+app.post('/api/notify', async (req, res) => {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) return res.json({ skipped: true });
+  
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Discord notification failed:', err);
+    res.status(500).json({ error: 'Notification failed' });
+  }
+});
+
 // Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
