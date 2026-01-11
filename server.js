@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
+const crypto = require('crypto');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -72,7 +73,7 @@ initDatabase().catch(err => {
 
 // Helper function to generate UID
 function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  return crypto.randomUUID();
 }
 
 // ==================== API ROUTES ====================
@@ -96,8 +97,11 @@ app.post('/api/init-db', async (req, res) => {
 // Get all keys
 app.get('/api/keys', async (req, res) => {
   try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
     const result = await pool.query(
-      'SELECT * FROM keys ORDER BY created_at DESC'
+      'SELECT * FROM keys ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+      [limit, offset]
     );
     res.json(result.rows);
   } catch (err) {
@@ -253,14 +257,19 @@ app.get('/api/products', async (req, res) => {
 // Get statistics
 app.get('/api/stats', async (req, res) => {
   try {
-    const totalResult = await pool.query('SELECT COUNT(*) as count FROM keys');
-    const availableResult = await pool.query("SELECT COUNT(*) as count FROM keys WHERE status = 'available'");
-    const assignedResult = await pool.query("SELECT COUNT(*) as count FROM keys WHERE status = 'assigned'");
+    const result = await pool.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'available') as available,
+        COUNT(*) FILTER (WHERE status = 'assigned') as assigned
+      FROM keys
+    `);
     
+    const stats = result.rows[0];
     res.json({
-      total: parseInt(totalResult.rows[0].count),
-      available: parseInt(availableResult.rows[0].count),
-      assigned: parseInt(assignedResult.rows[0].count)
+      total: parseInt(stats.total),
+      available: parseInt(stats.available),
+      assigned: parseInt(stats.assigned)
     });
   } catch (err) {
     console.error('Error fetching stats:', err);
