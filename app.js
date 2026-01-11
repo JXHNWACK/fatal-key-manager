@@ -3,6 +3,17 @@ function $(q, el){ return (el||document).querySelector(q); }
 function openDialog(id){ try{ document.getElementById(id).showModal(); }catch{ document.getElementById(id).setAttribute('open',''); } }
 function closeDialog(id){ try{ document.getElementById(id).close(); }catch{ document.getElementById(id).removeAttribute('open'); } }
 
+// Helper to prevent XSS attacks
+function escapeHtml(text) {
+  if (text == null) return '';
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 /* ---------- Banner & Toast ---------- */
 function showBanner(msg){
   var host=document.getElementById('banner'); if(!host) return;
@@ -40,7 +51,8 @@ function applyUserAccent(user){
 
 /* ======== Configuration ======== */
 const API_BASE_URL = 'https://fatal-key-manager-production.up.railway.app';
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW';
+// SECURITY WARNING: Do not expose Webhook URLs in client-side code. Move this logic to server.js.
+const DISCORD_WEBHOOK_URL = null; 
 
 /* ======== API Functions ======== */
 async function apiRequest(endpoint, options = {}) {
@@ -120,6 +132,7 @@ function sendDiscordNotification(embed) {
 }
 
 /* ======== Login ======== */
+// SECURITY WARNING: Client-side auth is insecure. Move authentication to the server.
 const USERS = { 'Administrator':'1212' };
 
 var __rotTimer = null;
@@ -263,7 +276,10 @@ function toggleTheme(){
 }
 
 function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9); 
 }
 
 function sortRows(rows){
@@ -440,11 +456,11 @@ function render(){
   
   tbody.innerHTML = filtered.map(k => `
     <tr>
-      <td>${k.code}</td>
-      <td>${k.product}</td>
-      <td>${k.type}</td>
-      <td><span class="status status-${k.status}">${k.status}</span></td>
-      <td>${k.assignedTo || '-'}</td>
+      <td>${escapeHtml(k.code)}</td>
+      <td>${escapeHtml(k.product)}</td>
+      <td>${escapeHtml(k.type)}</td>
+      <td><span class="status status-${escapeHtml(k.status)}">${escapeHtml(k.status)}</span></td>
+      <td>${escapeHtml(k.assignedTo || '-')}</td>
       <td>
         <button onclick="copyCode('${k.code}')" title="Copy">📋</button>
         ${k.status === 'available' ? `<button onclick="openAssign('${k.id}')" title="Assign">✓</button>` : ''}
@@ -629,10 +645,10 @@ function openHistory(id){
   } else {
     tbody.innerHTML = k.history.slice().reverse().map(h => `
       <tr>
-        <td>${new Date(h.at).toLocaleString()}</td>
-        <td>${h.action}</td>
-        <td>${h.by || '-'}</td>
-        <td>${h.assignedTo || h.reason || '-'}</td>
+        <td>${escapeHtml(new Date(h.at).toLocaleString())}</td>
+        <td>${escapeHtml(h.action)}</td>
+        <td>${escapeHtml(h.by || '-')}</td>
+        <td>${escapeHtml(h.assignedTo || h.reason || '-')}</td>
       </tr>
     `).join('');
   }
