@@ -39,226 +39,53 @@ function applyUserAccent(user){
 }
 
 /* ======== Configuration ======== */
-const GOOGLE_CLIENT_ID = '649659526814-c1spd627if8i26m0nm15trn1reqm1652.apps.googleusercontent.com';
-const GOOGLE_API_KEY = 'AIzaSyDQlaageknL2NQ3v-k5iPOVEafkFV3a-iU';
-const SPREADSHEET_ID = '1HUOyM03mxN4VCZTHcGjqtXAsDlfsMCr3vx-gSPwTVL4';
-const SHEET_NAME = 'Keys';
-const SHEET_RANGE = `${SHEET_NAME}!A:J`;
-const CLOUD_ENABLED = true;
+const API_BASE_URL = 'https://fatal-key-manager-production.up.railway.app';
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1438300840174817290/sc_5gEywaTEi2bauBLIdldEtGArrNJxuhW5otzImyvtNVaME-AMWk0RZBeqZW4bZbnPW';
-const EXPECTED_COLS = ['id','code','product','type','status','assignedTo','reason','date','assignedBy','history'];
 
-/* ======== Google API Setup ======== */
-let gapiInited = false;
-let gisInited = false;
-let tokenClient;
-let gapiReadyPromise = null;
-
-window.gisLoaded = function() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/spreadsheets',
-    callback: '',
-  });
-  gisInited = true;
-  gapi.load('client', initializeGapiClient);
-}
-
-async function initializeGapiClient() {
+/* ======== API Functions ======== */
+async function apiRequest(endpoint, options = {}) {
   try {
-    await gapi.client.init({
-      apiKey: GOOGLE_API_KEY,
-      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
     });
-    gapiInited = true;
-    checkGapiReady();
-  } catch(e) {
-    console.error("GAPI Init Error", e);
-    showBanner("Google API Init Failed: " + (e.message || e));
-  }
-}
-
-function checkGapiReady() {
-  if (gapiInited && gisInited && gapiReadyPromise && gapiReadyPromise.resolve) {
-    console.log("Google API ready");
-    gapiReadyPromise.resolve();
-  }
-}
-
-function whenGapiReady() {
-  if (!gapiReadyPromise || !gapiReadyPromise.promise) {
-    let resolver;
-    const promise = new Promise(resolve => { resolver = resolve; });
-    gapiReadyPromise = { promise, resolve: resolver };
-  }
-  return gapiReadyPromise.promise;
-}
-
-async function ensureAuth() {
-  await whenGapiReady();
-  if (gapi.client.getToken() === null) {
-    return new Promise((resolve) => {
-      tokenClient.callback = (resp) => {
-        if (resp.error !== undefined) {
-          console.error('Google Auth Error:', resp.error);
-          showBanner(`Google Auth Error: ${resp.error}`);
-          resolve(false);
-        } else {
-          console.log('Google sign-in successful');
-          resolve(true);
-        }
-      };
-      tokenClient.requestAccessToken({});
-    });
-  }
-  return true;
-}
-
-async function backoff(fn, maxRetries = 5, delay = 1000) {
-  let lastErr;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch(e) {
-      lastErr = e;
-      if (i < maxRetries - 1) {
-        await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
-      }
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
-  }
-  throw lastErr;
-}
-
-async function callSheetApi(fn){
-  if (!await ensureAuth()) throw new Error("Authentication failed");
-  try { 
-    return await backoff(fn); 
-  } catch(e){
-    if(e?.result?.error?.code === 401){
-      console.warn("Token expired, refreshing");
-      gapi.client.setToken(null);
-      if(!await ensureAuth()) throw new Error("Re-auth failed");
-      return await backoff(fn);
-    }
-    throw e;
+    
+    return await response.json();
+  } catch (err) {
+    console.error('API request failed:', err);
+    throw err;
   }
 }
 
-function coerceRow(r){
-  let history = [];
-  try {
-    if (r.history && typeof r.history === 'string') history = JSON.parse(r.history);
-    else if (Array.isArray(r.history)) history = r.history;
-  } catch(e) {}
-  return {
-    id: r.id || uid(),
-    code: r.code || '',
-    product: r.product || '',
-    type: r.type || 'Day',
-    status: r.status || 'available',
-    assignedTo: r.assignedTo || '',
-    reason: r.reason || '',
-    date: r.date || '',
-    assignedBy: r.assignedBy || '',
-    history: history
-  };
+async function getAllKeys() {
+  return await apiRequest('/api/keys');
 }
 
-async function cloudGetAll(){
-  const exec = () => gapi.client.sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: SHEET_RANGE,
-  });
-  const response = await callSheetApi(exec);
-  const values = response.result.values || [];
-  if (values.length < 1) return [];
-  const header = values[0];
-  const rows = values.slice(1);
-  return rows.map(row => {
-    const obj = {};
-    header.forEach((col, i) => { obj[col] = row[i] || ''; });
-    return coerceRow(obj);
+async function addKeys(keys) {
+  return await apiRequest('/api/keys', {
+    method: 'POST',
+    body: JSON.stringify(keys),
   });
 }
 
-async function cloudAppend(rows){
-  if(!rows || !rows.length) return;
-  const values = rows.map(row => EXPECTED_COLS.map(col => {
-    const val = row[col];
-    if (col === 'history' && Array.isArray(val)) return JSON.stringify(val);
-    return val !== undefined && val !== null ? val : '';
-  }));
-  const exec = () => gapi.client.sheets.spreadsheets.values.append({
-    spreadsheetId: SPREADSHEET_ID,
-    range: SHEET_RANGE,
-    valueInputOption: 'USER_ENTERED',
-    insertDataOption: 'INSERT_ROWS',
-    resource: { values },
+async function updateKey(id, updates) {
+  return await apiRequest(`/api/keys/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
   });
-  await callSheetApi(exec);
-  setCloudStatus(true);
 }
 
-async function cloudPatchById(id, patch){
-  const execGetId = () => gapi.client.sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_NAME}!A:A`
+async function deleteKey(id) {
+  return await apiRequest(`/api/keys/${id}`, {
+    method: 'DELETE',
   });
-  const idCol = await callSheetApi(execGetId);
-  const rowNum = (idCol.result.values || []).findIndex(row => row[0] === id) + 1;
-  if (rowNum < 1) throw new Error(`Row not found`);
-  
-  const execGet = () => gapi.client.sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_NAME}!${rowNum}:${rowNum}`
-  });
-  const current = (await callSheetApi(execGet)).result.values[0];
-  
-  const newVals = [...current];
-  for (const key in patch) {
-    const idx = EXPECTED_COLS.indexOf(key);
-    if (idx !== -1) {
-      const val = patch[key];
-      newVals[idx] = (key === 'history' && Array.isArray(val)) ? JSON.stringify(val) : (val !== undefined && val !== null ? val : '');
-    }
-  }
-  
-  const execUpdate = () => gapi.client.sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_NAME}!${rowNum}:${rowNum}`,
-    valueInputOption: 'USER_ENTERED',
-    resource: { values: [newVals] },
-  });
-  await callSheetApi(execUpdate);
-  setCloudStatus(true);
-}
-
-async function cloudDeleteById(id){
-  const execGetId = () => gapi.client.sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: `${SHEET_NAME}!A:A`
-  });
-  const idCol = await callSheetApi(execGetId);
-  const rowNum = (idCol.result.values || []).findIndex(row => row[0] === id) + 1;
-  if (rowNum < 1) throw new Error(`Row not found`);
-  
-  const exec = () => gapi.client.sheets.spreadsheets.batchUpdate({
-    spreadsheetId: SPREADSHEET_ID,
-    resource: {
-      requests: [{
-        deleteDimension: {
-          range: {
-            sheetId: 0,
-            dimension: 'ROWS',
-            startIndex: rowNum - 1,
-            endIndex: rowNum
-          }
-        }
-      }]
-    }
-  });
-  await callSheetApi(exec);
-  setCloudStatus(true);
 }
 
 function setCloudStatus(ok) {
@@ -387,7 +214,6 @@ function attemptLogin(ev){
       applyUserAccent(u);
       
       try {
-        await whenGapiReady();
         await load();
       } catch(e) {
         console.error("Load failed:", e);
@@ -411,7 +237,6 @@ function attemptLogin(ev){
 window.attemptLogin = attemptLogin;
 
 /* ======== State & Storage ======== */
-const STORAGE_KEY = 'fs-key-manager-v1';
 const state = {
   keys: [],
   products: [],
@@ -448,7 +273,7 @@ function sortRows(rows){
   
   function val(k){
     if(key === 'date'){ return k.date ? new Date(k.date).getTime() : 0; }
-    if(key === 'assignedTo'){ return (k.assignedTo || '').toLowerCase(); }
+    if(key === 'assignedTo' || key === 'assigned_to'){ return (k.assigned_to || k.assignedTo || '').toLowerCase(); }
     if(key === 'product'){ return (k.product || '').toLowerCase(); }
     return (k[key] || '').toString().toLowerCase();
   }
@@ -497,55 +322,33 @@ async function onUndo(){
   try {
     if(last.type === 'history_revert'){
       const {id, history} = last.payload;
-      if(CLOUD_ENABLED){
-        await cloudPatchById(id, {history});
-        await load();
-      } else {
-        const k = state.keys.find(x => x.id === id);
-        if(k) k.history = history;
-        save();
-      }
+      await updateKey(id, {history});
+      await load();
     } else if(last.type === 'add'){
       const ids = last.payload.ids || [];
-      if(CLOUD_ENABLED){
-        for(const id of ids){ await cloudDeleteById(id); }
-        await load();
-      } else {
-        state.keys = state.keys.filter(k => !ids.includes(k.id));
-        save();
+      for(const id of ids){
+        await deleteKey(id);
       }
+      await load();
     } else if(last.type === 'delete'){
       const items = last.payload.items || [];
-      if(CLOUD_ENABLED){
-        await cloudAppend(items);
-        await load();
-      } else {
-        state.keys.unshift(...items);
-        save();
-      }
+      await addKeys(items);
+      await load();
     } else if(last.type === 'assign' || last.type === 'release'){
       const prev = last.payload.prev;
       if(!prev) return;
-      if(CLOUD_ENABLED){
-        await cloudPatchById(prev.id, {
-          code: prev.code,
-          product: prev.product,
-          type: prev.type,
-          status: prev.status,
-          assignedTo: prev.assignedTo,
-          reason: prev.reason,
-          date: prev.date,
-          assignedBy: prev.assignedBy || '',
-          history: prev.history
-        });
-        await load();
-      } else {
-        const k = state.keys.find(x => x.id === prev.id);
-        if(k){
-          Object.assign(k, prev);
-        }
-        save();
-      }
+      await updateKey(prev.id, {
+        code: prev.code,
+        product: prev.product,
+        type: prev.type,
+        status: prev.status,
+        assigned_to: prev.assigned_to || prev.assignedTo,
+        reason: prev.reason,
+        date: prev.date,
+        assigned_by: prev.assigned_by || prev.assignedBy || '',
+        history: prev.history
+      });
+      await load();
     }
   } catch(e){
     console.error('Undo failed', e);
@@ -555,32 +358,30 @@ async function onUndo(){
 
 /* ======== Load/Save ======== */
 async function load(){
-  console.log('Loading data...');
-  if(CLOUD_ENABLED){
-    try {
-      state.keys = await cloudGetAll();
-      setCloudStatus(true);
-    } catch(err){
-      console.error('Cloud load failed', err);
-      const errMsg = err.message || String(err);
-      let msg = 'Failed to load data from Google Sheets: ' + errMsg;
-      if(errMsg.includes('403') || errMsg.includes('404')){
-        msg += ' (Check SPREADSHEET_ID and permissions)';
-      }
-      showBanner(msg);
-      state.keys = [];
-      setCloudStatus(false);
-    }
-  } else {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if(stored){
-        const data = JSON.parse(stored);
-        state.keys = data.keys || [];
-      }
-    } catch(e){
-      console.error('Local load failed', e);
-    }
+  console.log('Loading data from Railway...');
+  try {
+    const keys = await getAllKeys();
+    
+    // Convert snake_case from DB to camelCase for frontend
+    state.keys = keys.map(k => ({
+      id: k.id,
+      code: k.code,
+      product: k.product,
+      type: k.type,
+      status: k.status,
+      assignedTo: k.assigned_to || '',
+      reason: k.reason || '',
+      date: k.date || '',
+      assignedBy: k.assigned_by || '',
+      history: k.history || []
+    }));
+    
+    setCloudStatus(true);
+  } catch(err){
+    console.error('Load failed', err);
+    showBanner('Failed to load data from server: ' + (err.message || err));
+    state.keys = [];
+    setCloudStatus(false);
   }
   
   state.products = ['All','Assigned'];
@@ -591,15 +392,6 @@ async function load(){
   });
   
   render();
-}
-
-function save(){
-  if(CLOUD_ENABLED) return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({keys: state.keys}));
-  } catch(e){
-    console.error('Save failed', e);
-  }
 }
 
 /* ======== Render ======== */
@@ -688,33 +480,26 @@ async function removeKey(id){
   
   pushUndo({type: 'delete', payload: {items: [k]}});
   
-  if(CLOUD_ENABLED){
-    try {
-      await cloudDeleteById(id);
-      await load();
-      showToast('Deleted ✔');
-    } catch(e){
-      console.error('Delete failed', e);
-      showBanner('Delete failed: ' + (e.message || e));
-    }
-  } else {
-    state.keys = state.keys.filter(x => x.id !== id);
-    save();
-    render();
+  try {
+    await deleteKey(id);
+    await load();
     showToast('Deleted ✔');
+    
+    sendDiscordNotification({
+      title: '🗑 Key Deleted',
+      color: 15158332,
+      fields: [
+        {name: 'Product', value: k.product, inline: true},
+        {name: 'Type', value: k.type, inline: true},
+        {name: 'Deleted By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true},
+        {name: 'Key', value: '`' + k.code + '`', inline: false}
+      ],
+      timestamp: new Date().toISOString()
+    });
+  } catch(e){
+    console.error('Delete failed', e);
+    showBanner('Delete failed: ' + (e.message || e));
   }
-  
-  sendDiscordNotification({
-    title: '🗑 Key Deleted',
-    color: 15158332,
-    fields: [
-      {name: 'Product', value: k.product, inline: true},
-      {name: 'Type', value: k.type, inline: true},
-      {name: 'Deleted By', value: (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown', inline: true},
-      {name: 'Key', value: '`' + k.code + '`', inline: false}
-    ],
-    timestamp: new Date().toISOString()
-  });
 }
 
 async function releaseKey(id){
@@ -734,43 +519,32 @@ async function releaseKey(id){
   
   const newHistory = [...k.history, histEntry];
   
-  if(CLOUD_ENABLED){
-    try {
-      await cloudPatchById(id, {
-        status: 'available',
-        assignedTo: '',
-        reason: '',
-        date: '',
-        history: newHistory
-      });
-      await load();
-      showToast('Released ✔');
-    } catch(e){
-      console.error('Release failed', e);
-      showBanner('Release failed: ' + (e.message || e));
-    }
-  } else {
-    k.status = 'available';
-    k.assignedTo = '';
-    k.reason = '';
-    k.date = '';
-    k.history = newHistory;
-    save();
-    render();
+  try {
+    await updateKey(id, {
+      status: 'available',
+      assigned_to: '',
+      reason: '',
+      date: null,
+      history: newHistory
+    });
+    await load();
     showToast('Released ✔');
+    
+    sendDiscordNotification({
+      title: '↩ Key Released',
+      color: 3447003,
+      fields: [
+        {name: 'Product', value: k.product, inline: true},
+        {name: 'Type', value: k.type, inline: true},
+        {name: 'Released By', value: histEntry.by, inline: true},
+        {name: 'Key', value: '`' + k.code + '`', inline: false}
+      ],
+      timestamp: new Date().toISOString()
+    });
+  } catch(e){
+    console.error('Release failed', e);
+    showBanner('Release failed: ' + (e.message || e));
   }
-  
-  sendDiscordNotification({
-    title: '↩ Key Released',
-    color: 3447003,
-    fields: [
-      {name: 'Product', value: k.product, inline: true},
-      {name: 'Type', value: k.type, inline: true},
-      {name: 'Released By', value: histEntry.by, inline: true},
-      {name: 'Key', value: '`' + k.code + '`', inline: false}
-    ],
-    timestamp: new Date().toISOString()
-  });
 }
 
 function openAssign(id){
@@ -811,49 +585,36 @@ async function saveAssign(){
   
   const newHistory = [...k.history, histEntry];
   
-  if(CLOUD_ENABLED){
-    try {
-      await cloudPatchById(id, {
-        status: 'assigned',
-        assignedTo: assignTo,
-        reason: reason,
-        date: new Date().toISOString(),
-        assignedBy: nowUser,
-        history: newHistory
-      });
-      await load();
-      showToast('Assigned ✔');
-    } catch(e){
-      console.error('Assign failed', e);
-      showBanner('Assign failed: ' + (e.message || e));
-    }
-  } else {
-    k.status = 'assigned';
-    k.assignedTo = assignTo;
-    k.reason = reason;
-    k.date = new Date().toISOString();
-    k.assignedBy = nowUser;
-    k.history = newHistory;
-    save();
-    render();
+  try {
+    await updateKey(id, {
+      status: 'assigned',
+      assigned_to: assignTo,
+      reason: reason,
+      date: new Date().toISOString(),
+      assigned_by: nowUser,
+      history: newHistory
+    });
+    await load();
     showToast('Assigned ✔');
+    closeDialog('assignModal');
+    
+    sendDiscordNotification({
+      title: '✅ Key Assigned',
+      color: 3066993,
+      fields: [
+        {name: 'Product', value: k.product, inline: true},
+        {name: 'Type', value: k.type, inline: true},
+        {name: 'Assigned By', value: nowUser, inline: true},
+        {name: 'Assigned To', value: assignTo, inline: true},
+        {name: 'Reason', value: reason, inline: true},
+        {name: 'Key', value: '`' + k.code + '`', inline: false}
+      ],
+      timestamp: new Date().toISOString()
+    });
+  } catch(e){
+    console.error('Assign failed', e);
+    showBanner('Assign failed: ' + (e.message || e));
   }
-  
-  closeDialog('assignModal');
-  
-  sendDiscordNotification({
-    title: '✅ Key Assigned',
-    color: 3066993,
-    fields: [
-      {name: 'Product', value: k.product, inline: true},
-      {name: 'Type', value: k.type, inline: true},
-      {name: 'Assigned By', value: nowUser, inline: true},
-      {name: 'Assigned To', value: assignTo, inline: true},
-      {name: 'Reason', value: reason, inline: true},
-      {name: 'Key', value: '`' + k.code + '`', inline: false}
-    ],
-    timestamp: new Date().toISOString()
-  });
 }
 
 function openHistory(id){
@@ -924,21 +685,18 @@ async function saveBulkAdd(){
   }
   
   const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
-  const rows = newCodes.map(code => {
-    const history = [{action: 'created', by: nowUser, at: new Date().toISOString()}];
-    return {
-      id: uid(),
-      code,
-      product,
-      type,
-      status: 'available',
-      assignedTo: '',
-      reason: '',
-      date: '',
-      assignedBy: nowUser,
-      history
-    };
-  });
+  const rows = newCodes.map(code => ({
+    id: uid(),
+    code,
+    product,
+    type,
+    status: 'available',
+    assigned_to: '',
+    reason: '',
+    date: null,
+    assigned_by: nowUser,
+    history: [{action: 'created', by: nowUser, at: new Date().toISOString()}]
+  }));
   
   sendDiscordNotification({
     title: '📦 Stock Added (Bulk)',
@@ -952,23 +710,8 @@ async function saveBulkAdd(){
     timestamp: new Date().toISOString()
   });
   
-  if(CLOUD_ENABLED){
-    try {
-      await cloudAppend(rows);
-      pushUndo({type: 'add', payload: {ids: rows.map(r => r.id)}});
-      state.filterProduct = product;
-      state.filterType = type;
-      state.search = '';
-      showBanner(`Added ${rows.length} ${product} • ${type} key(s).` + (skipped.length ? ` Skipped ${skipped.length} duplicate(s).` : ''));
-      closeDialog('bulkModal');
-      showToast('Added ✔');
-      await load();
-    } catch(e){
-      console.error('Bulk add failed', e);
-      showBanner('Bulk add failed: ' + (e.message || e));
-    }
-  } else {
-    state.keys.unshift(...rows);
+  try {
+    await addKeys(rows);
     pushUndo({type: 'add', payload: {ids: rows.map(r => r.id)}});
     state.filterProduct = product;
     state.filterType = type;
@@ -976,8 +719,10 @@ async function saveBulkAdd(){
     showBanner(`Added ${rows.length} ${product} • ${type} key(s).` + (skipped.length ? ` Skipped ${skipped.length} duplicate(s).` : ''));
     closeDialog('bulkModal');
     showToast('Added ✔');
-    save();
-    render();
+    await load();
+  } catch(e){
+    console.error('Bulk add failed', e);
+    showBanner('Bulk add failed: ' + (e.message || e));
   }
 }
 
@@ -996,8 +741,18 @@ async function saveSingleAdd(){
   
   const nowUser = (sessionStorage && sessionStorage.getItem('fs_user')) || 'unknown';
   const id = uid();
-  const history = [{action: 'created', by: nowUser, at: new Date().toISOString()}];
-  const item = {id, code, product, type, status: 'available', assignedTo: '', reason: '', date: '', assignedBy: nowUser, history};
+  const item = {
+    id,
+    code,
+    product,
+    type,
+    status: 'available',
+    assigned_to: '',
+    reason: '',
+    date: null,
+    assigned_by: nowUser,
+    history: [{action: 'created', by: nowUser, at: new Date().toISOString()}]
+  };
   
   sendDiscordNotification({
     title: '➕ New Key Added',
@@ -1011,30 +766,18 @@ async function saveSingleAdd(){
     timestamp: new Date().toISOString()
   });
   
-  if(CLOUD_ENABLED){
-    try {
-      await cloudAppend([item]);
-      pushUndo({type: 'add', payload: {ids: [id]}});
-      state.filterProduct = product;
-      state.filterType = type;
-      state.search = '';
-      closeDialog('singleModal');
-      showToast('Added ✔');
-      await load();
-    } catch(e){
-      console.error('Add failed', e);
-      showBanner('Add failed: ' + (e.message || e));
-    }
-  } else {
-    state.keys.unshift(item);
+  try {
+    await addKeys([item]);
     pushUndo({type: 'add', payload: {ids: [id]}});
     state.filterProduct = product;
     state.filterType = type;
     state.search = '';
     closeDialog('singleModal');
     showToast('Added ✔');
-    save();
-    render();
+    await load();
+  } catch(e){
+    console.error('Add failed', e);
+    showBanner('Add failed: ' + (e.message || e));
   }
 }
 
@@ -1106,7 +849,6 @@ document.addEventListener('keydown', function(e){
       if(menu) menu.style.display = 'inline-block';
       if(btn) btn.textContent = u + ' ▾';
       
-      await whenGapiReady();
       await load();
     } else {
       console.log('Setting up login...');
@@ -1194,5 +936,3 @@ function logout(){
 
 window.logout = logout;
 window.scrollTopSmooth = scrollTopSmooth;
-
-if(window.gisLoadedPending) window.gisLoaded();
