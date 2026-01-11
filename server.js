@@ -28,36 +28,47 @@ pool.connect((err, client, release) => {
 
 // Initialize database table
 async function initDatabase() {
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS keys (
-      id VARCHAR(255) PRIMARY KEY,
-      code VARCHAR(255) NOT NULL UNIQUE,
-      product VARCHAR(255) NOT NULL,
-      type VARCHAR(50) NOT NULL,
-      status VARCHAR(50) DEFAULT 'available',
-      assigned_to VARCHAR(255),
-      reason TEXT,
-      date TIMESTAMP,
-      assigned_by VARCHAR(255),
-      history JSONB DEFAULT '[]'::jsonb,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    
-    CREATE INDEX IF NOT EXISTS idx_keys_status ON keys(status);
-    CREATE INDEX IF NOT EXISTS idx_keys_product ON keys(product);
-    CREATE INDEX IF NOT EXISTS idx_keys_code ON keys(code);
-  `;
-  
   try {
-    await pool.query(createTableQuery);
-    console.log('Database tables initialized');
+    // Create table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS keys (
+        id VARCHAR(255) PRIMARY KEY,
+        code VARCHAR(255) NOT NULL UNIQUE,
+        product VARCHAR(255) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        status VARCHAR(50) DEFAULT 'available',
+        assigned_to VARCHAR(255),
+        reason TEXT,
+        date TIMESTAMP,
+        assigned_by VARCHAR(255),
+        history JSONB DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Table "keys" created/verified');
+    
+    // Create indexes
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_keys_status ON keys(status)');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_keys_product ON keys(product)');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_keys_code ON keys(code)');
+    console.log('✓ Indexes created/verified');
+    
+    // Check if table has data
+    const countResult = await pool.query('SELECT COUNT(*) FROM keys');
+    console.log(`✓ Database ready - ${countResult.rows[0].count} keys in database`);
+    
   } catch (err) {
-    console.error('Error initializing database:', err);
+    console.error('❌ Error initializing database:', err);
+    throw err;
   }
 }
 
-initDatabase();
+// Initialize database on startup
+initDatabase().catch(err => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
+});
 
 // Helper function to generate UID
 function uid() {
@@ -69,6 +80,17 @@ function uid() {
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Manual database initialization endpoint
+app.post('/api/init-db', async (req, res) => {
+  try {
+    await initDatabase();
+    res.json({ success: true, message: 'Database initialized successfully' });
+  } catch (err) {
+    console.error('Manual DB init failed:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Get all keys
